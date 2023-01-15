@@ -1,0 +1,3 @@
+# Phinx Snowflake Adapter
+
+This repository contains a **Snowflake Adapter** for PHP **Phinx database migration tool**. The adapter allows Phinx to communicate with a Snowflake database and helps with version control of your Snowflake database. In order to use the adapter, you'll need to have Phinx and the **Snowflake PDO** driver installed and set up. To install the Snowflake PDO driver, you can check out my [Docker Snowflake PDO](https://github.com/szabacsik/docker-apache-php-xdebug-snowflake-pdo) solution which has the driver included. For instructions on how to use and set up the adapter, be sure to check out the official [Phinx Documentation](https://book.cakephp.org/phinx/0/en/configuration.html#supported-adapters) first.
