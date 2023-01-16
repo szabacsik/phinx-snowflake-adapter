@@ -7,4 +7,8 @@ use Szabacsik\Phinx\SnowflakeAdapter;
 
 class SnowflakeAdapterTest extends TestCase
 {
+    public function testHasTransactions()
+    {
+        $this->assertTrue((new SnowflakeAdapter([]))->hasTransactions());
+    }
 }

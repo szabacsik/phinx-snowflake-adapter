@@ -15,7 +15,7 @@ class SnowflakeAdapter extends PdoAdapter
 {
     public function hasTransactions(): bool
     {
-        // TODO: Implement hasTransactions() method.
+        return true;
     }
 
     public function beginTransaction(): void
