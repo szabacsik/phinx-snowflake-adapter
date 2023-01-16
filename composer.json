@@ -1,0 +1,42 @@
+{
+  "name": "szabacsik/phinx-snowflake-adapter",
+  "description": "Phinx Snowflake Adapter",
+  "type": "library",
+  "require-dev": {
+    "phpunit/phpunit": "*",
+    "squizlabs/php_codesniffer": "*",
+    "phpstan/phpstan": "*",
+    "rector/rector": "*",
+    "infection/infection": "*",
+    "vimeo/psalm": "*",
+    "phpmd/phpmd": "*",
+    "ext-pdo": "*",
+    "robmorgan/phinx": "*"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Szabacsik\\Phinx\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Szabacsik\\Phinx\\Tests\\": "tests/"
+    }
+  },
+  "authors": [
+    {
+      "name": "András Szabácsik",
+      "email": "andras@szabacsik.hu"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=8.2"
+  },
+  "config": {
+    "allow-plugins": {
+      "infection/extension-installer": true
+    }
+  }
+}
