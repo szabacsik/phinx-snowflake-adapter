@@ -20,7 +20,7 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function beginTransaction(): void
     {
-        // TODO: Implement beginTransaction() method.
+        $this->execute('begin transaction');
     }
 
     public function commitTransaction(): void

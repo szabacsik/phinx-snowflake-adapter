@@ -11,4 +11,12 @@ class SnowflakeAdapterTest extends TestCase
     {
         $this->assertTrue((new SnowflakeAdapter([]))->hasTransactions());
     }
+
+    public function testBeginTransaction()
+    {
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['execute']);
+        $mock->expects($this->once())->method('execute')->with('begin transaction');
+        $mock->beginTransaction();
+    }
+    
 }
