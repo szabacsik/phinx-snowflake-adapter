@@ -40,5 +40,12 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals($expected, (new SnowflakeAdapter([]))->quoteTableName($tableName));
     }
 
+    public function testQuoteColumnName()
+    {
+        $columnName = 'lorem_IPSUM';
+        $expected = "\"$columnName\"";
+        $this->assertEquals($expected, (new SnowflakeAdapter([]))->quoteColumnName($columnName));
+    }
+
 
 }

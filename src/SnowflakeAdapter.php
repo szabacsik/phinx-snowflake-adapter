@@ -46,9 +46,20 @@ class SnowflakeAdapter extends PdoAdapter
         return '"' . $tableName . '"';
     }
 
+    /**
+     * Snowflake stores database objects (such as tables and columns) in uppercase by default.
+     * This means that even if you create a table or column with lowercase letters,
+     * Snowflake will still return the names in uppercase when queried.
+     * This can cause issues if your code is expecting the names to be returned in lowercase.
+     * To prevent this issue, this function uses double quotes around the column names in the SQL query.
+     * This forces Snowflake to treat these identifiers as case-sensitive and returns the names as they were created.
+     * Using double quotes around the table and column names is
+     * a best practice to ensure that the data is queried correctly.
+     * @see https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html
+     */
     public function quoteColumnName(string $columnName): string
     {
-        // TODO: Implement quoteColumnName() method.
+        return '"' . $columnName . '"';
     }
 
     public function hasTable(string $tableName): bool
