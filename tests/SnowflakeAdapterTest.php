@@ -47,5 +47,17 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals($expected, (new SnowflakeAdapter([]))->quoteColumnName($columnName));
     }
 
+    public function testHasTable()
+    {
+        $tableName = 'lorem_IPSUM';
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['fetchRow']);
+        $mock->expects($this->exactly(2))
+            ->method('fetchRow')
+            ->with("show tables like '$tableName'")
+            ->willReturnOnConsecutiveCalls([], ['name' => $tableName]);
+        $this->assertFalse($mock->hasTable($tableName));
+        $this->assertTrue($mock->hasTable($tableName));
+    }
+
 
 }

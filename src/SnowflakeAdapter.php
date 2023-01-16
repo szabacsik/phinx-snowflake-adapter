@@ -64,7 +64,8 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function hasTable(string $tableName): bool
     {
-        // TODO: Implement hasTable() method.
+        $sql = "show tables like '$tableName'";
+        return (bool)$this->fetchRow($sql);
     }
 
     public function createTable(Table $table, array $columns = [], array $indexes = []): void
