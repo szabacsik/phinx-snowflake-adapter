@@ -33,5 +33,12 @@ class SnowflakeAdapterTest extends TestCase
         $mock->rollbackTransaction();
     }
 
+    public function testQuoteTableName()
+    {
+        $tableName = 'lorem_IPSUM';
+        $expected = "\"$tableName\"";
+        $this->assertEquals($expected, (new SnowflakeAdapter([]))->quoteTableName($tableName));
+    }
+
 
 }

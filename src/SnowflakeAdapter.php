@@ -33,9 +33,17 @@ class SnowflakeAdapter extends PdoAdapter
         $this->execute('rollback');
     }
 
+    /**
+     * Snowflake uses case-insensitive comparison for unquoted identifiers such as table and column names by default.
+     * This means that when querying a table, you can use uppercase or lowercase letters for the table name
+     * and Snowflake will still be able to match it. However, if you want to
+     * force Snowflake to differentiate between uppercase and lowercase characters in table names,
+     * you can use double quotes around the table name when creating it.
+     * @see https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html
+     */
     public function quoteTableName(string $tableName): string
     {
-        // TODO: Implement quoteTableName() method.
+        return '"' . $tableName . '"';
     }
 
     public function quoteColumnName(string $columnName): string
