@@ -30,7 +30,7 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function rollbackTransaction(): void
     {
-        // TODO: Implement rollbackTransaction() method.
+        $this->execute('rollback');
     }
 
     public function quoteTableName(string $tableName): string

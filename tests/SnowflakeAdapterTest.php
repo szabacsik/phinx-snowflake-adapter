@@ -26,5 +26,12 @@ class SnowflakeAdapterTest extends TestCase
         $mock->commitTransaction();
     }
 
+    public function testRollbackTransaction()
+    {
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['execute']);
+        $mock->expects($this->once())->method('execute')->with('rollback');
+        $mock->rollbackTransaction();
+    }
+
 
 }
