@@ -25,7 +25,7 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function commitTransaction(): void
     {
-        // TODO: Implement commitTransaction() method.
+        $this->execute('commit');
     }
 
     public function rollbackTransaction(): void

@@ -18,5 +18,13 @@ class SnowflakeAdapterTest extends TestCase
         $mock->expects($this->once())->method('execute')->with('begin transaction');
         $mock->beginTransaction();
     }
-    
+
+    public function testCommitTransaction()
+    {
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['execute']);
+        $mock->expects($this->once())->method('execute')->with('commit');
+        $mock->commitTransaction();
+    }
+
+
 }
