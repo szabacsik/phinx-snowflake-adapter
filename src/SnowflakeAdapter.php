@@ -212,4 +212,140 @@ class SnowflakeAdapter extends PdoAdapter
     {
         // TODO: Implement getChangeCommentInstructions() method.
     }
+
+    /**
+     * @link https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.html
+     * @link https://docs.snowflake.com/en/sql-reference/data-types-numeric.html
+     * @link https://docs.snowflake.com/en/sql-reference/data-types-text.html
+     * @link https://docs.snowflake.com/en/sql-reference/data-types-logical.html
+     * @link https://docs.snowflake.com/en/sql-reference/data-types-datetime.html
+     * @link https://docs.snowflake.com/en/sql-reference/data-types-semistructured.html
+     * @link https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html
+     * @link https://docs.snowflake.com/en/sql-reference/data-types-unsupported.html
+     * @link https://docs.snowflake.com/en/sql-reference/data-type-conversion.html
+     * @param Column $column
+     * @return string
+     */
+    public function getColumnSqlDefinition(Column $column): string
+    {
+        $def = '';
+
+        $synonymousWithNumber = [
+            'number', 'decimal', 'numeric'
+        ];
+        if (in_array($column->getType(), $synonymousWithNumber)) {
+            $def = 'number';
+            if ($column->getPrecision()) {
+                $def .= '(' . $column->getPrecision();
+                if ($column->getScale()) {
+                    $def .= ",{$column->getScale()})";
+                } else {
+                    $def .= ',0)';
+                }
+            }
+            if ($column->isIdentity()) {
+                $def .= ' identity';
+                if ($column->getIncrement() && $column->getSeed()) {
+                    $def .= "({$column->getSeed()},{$column->getIncrement()})";
+                }
+            }
+        }
+
+        $synonymousWithNumberWithoutPrecisionAndScale = [
+            'int', 'integer', 'bigint', 'smallint', 'tinyint', 'byteint'
+        ];
+        if (in_array($column->getType(), $synonymousWithNumberWithoutPrecisionAndScale)) {
+            $def = 'number';
+        }
+
+        $synonymousWithFloat = ['float', 'float4', 'float8', 'double', 'double precision', 'real'];
+        if (in_array($column->getType(), $synonymousWithFloat)) {
+            $def = 'float';
+        }
+
+        $synonymousWithVarchar = [
+            'varchar', 'char', 'character', 'nchar', 'string', 'text',
+            'nvarchar', 'nvarchar2', 'char varying', 'nchar varying'
+        ];
+        if (in_array($column->getType(), $synonymousWithVarchar)) {
+            $def = 'varchar';
+            if ($column->getLimit()) {
+                $def .= "({$column->getLimit()})";
+            }
+            if ($column->getCollation()) {
+                $def .= " collate '{$column->getCollation()}'";
+            }
+        }
+
+        if ($column->getType() === 'time') {
+            $def = 'time';
+            if ($column->getPrecision()) {
+                $def .= "({$column->getPrecision()})";
+            }
+        }
+
+        if ($column->getType() === 'date') {
+            $def = $column->getType();
+        }
+
+        if ($column->getType() === 'boolean') {
+            $def = $column->getType();
+        }
+
+        $aliases_for_TIMESTAMP_LTZ = ['timestamp_ltz', 'timestampltz', 'timestamp with local time zone'];
+        $aliases_for_TIMESTAMP_NTZ = ['timestamp_ntz', 'datetime', 'timestampntz', 'timestamp without time zone'];
+        $aliases_for_TIMESTAMP_TZ = ['timestamp_tz', 'timestamptz', 'timestamp with time zone'];
+        $timestamps = array_merge(
+            ['timestamp'], $aliases_for_TIMESTAMP_LTZ, $aliases_for_TIMESTAMP_NTZ, $aliases_for_TIMESTAMP_TZ
+        );
+        if (in_array($column->getType(), $timestamps)) {
+            $def = 'timestamp';
+            if (in_array($column->getType(), $aliases_for_TIMESTAMP_LTZ)) {
+                $def = 'timestamp_ltz';
+            }
+            if (in_array($column->getType(), $aliases_for_TIMESTAMP_NTZ)) {
+                $def = 'timestamp_ntz';
+            }
+            if (in_array($column->getType(), $aliases_for_TIMESTAMP_TZ)) {
+                $def = 'timestamp_tz';
+            }
+            if ($column->getPrecision()) {
+                $def .= "({$column->getPrecision()})";
+            }
+        }
+
+        $column->isNull() ? $def .= ' null' : $def .= ' not null';
+
+        if ($column->getDefault()) {
+            if ('null' != $column->getDefault()) {
+                $numeric = array_merge($synonymousWithNumber, $synonymousWithNumberWithoutPrecisionAndScale, $synonymousWithFloat);
+                $string = array_merge($synonymousWithVarchar, ['time', 'date'], $timestamps);
+                $functions = [
+                    'current_timestamp', 'sysdate', 'convert_timezone', 'to_varchar',
+                    'to_timestamp', 'to_timestamp_tz', 'to_timestamp_ntz'
+                ];
+                $matches = preg_grep("/" . implode("|", $functions) . "/i", array($column->getDefault()));
+                if (!empty($matches)) {
+                    $def .= ' default ' . $column->getDefault();
+                } elseif (in_array($column->getType(), $numeric)) {
+                    $def .= ' default ' . floatval($column->getDefault());
+                } elseif (in_array($column->getType(), $string)) {
+                    $def .= " default '{$column->getDefault()}'";
+                }
+            } else {
+                $def .= ' default null';
+            }
+        }
+
+        if ($column->getProperties()) {
+            $def .= ' ' . implode(' ', $column->getProperties());
+        }
+
+        if ($column->getComment()) {
+            $def .= " comment '{$column->getComment()}'";
+        }
+
+        return $def;
+    }
+
 }
