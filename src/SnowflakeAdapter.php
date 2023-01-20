@@ -103,7 +103,8 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function hasColumn(string $tableName, string $columnName): bool
     {
-        // TODO: Implement hasColumn() method.
+        $sql = "show columns like '$columnName' in table $tableName";
+        return (bool)$this->query($sql)->fetch();
     }
 
     public function hasIndex(string $tableName, $columns): bool

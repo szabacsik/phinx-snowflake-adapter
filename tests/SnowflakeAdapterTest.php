@@ -312,5 +312,18 @@ class SnowflakeAdapterTest extends TestCase
         return $data;
     }
 
+    public function testHasColumn()
+    {
+        $tableName = 'table';
+        $columnName = 'column';
+        $expected = "show columns like '$columnName' in table $tableName";
+        $statement = $this->createStub(\PDOStatement::class);
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['query']);
+        $mock->expects($this->once())
+            ->method('query')
+            ->with($expected)
+            ->willReturn($statement);
+        $mock->hasColumn($tableName, $columnName);
+    }
 
 }
