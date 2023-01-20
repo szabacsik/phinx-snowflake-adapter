@@ -3,6 +3,7 @@
 namespace Szabacsik\Phinx\Tests;
 
 use Phinx\Db\Table\Column;
+use Phinx\Db\Table\Table;
 use PHPUnit\Framework\TestCase;
 use Szabacsik\Phinx\SnowflakeAdapter;
 
@@ -251,6 +252,64 @@ class SnowflakeAdapterTest extends TestCase
             $columns[$testName] = $column;
         }
         return $columns;
+    }
+
+    /**
+     * @dataProvider createTableDataProvider
+     */
+    public function testCreateTable(Table $table, array $columns, array $indexes, string $expected)
+    {
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['execute']);
+        $mock->expects($this->once())->method('execute')->with($expected);
+        $mock->createTable($table, $columns, $indexes);
+    }
+
+    public function createTableDataProvider(): array
+    {
+        $tables = [
+            'my_awesome_table' => [
+                'name' => 'my_awesome_table',
+                'options' => ['primary_key' => ['lorem', 'ipsum']],
+                'indexes' => [],
+                'columns' => [
+                    ['type' => 'number', 'name' => 'id', 'null' => false, 'identity' => true],
+                    ['type' => 'varchar', 'name' => 'varchar', 'null' => false, 'identity' => false],
+                    ['type' => 'datetime', 'name' => 'datetime', 'null' => false, 'identity' => false],
+                ],
+                'expected' =>
+                    'create table "my_awesome_table" ("id" number identity not null, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("lorem", "ipsum"))',
+            ],
+            'phinxlog' => [
+                'name' => 'phinxlog',
+                'options' => ['id' => false, 'primary_key' => 'version'],
+                'indexes' => [],
+                'columns' => [
+                    ['name' => 'version', 'type' => 'biginteger', 'null' => false],
+                    ['name' => 'migration_name', 'type' => 'string', 'limit' => 100, 'default' => null, 'null' => true],
+                    ['name' => 'start_time', 'type' => 'timestamp', 'default' => null, 'null' => true],
+                    ['name' => 'end_time', 'type' => 'timestamp', 'default' => null, 'null' => true],
+                    ['name' => 'breakpoint', 'type' => 'boolean', 'default' => false, 'null' => false]
+                ],
+                'expected' =>
+                    'create table "phinxlog" ("version" number not null, "migration_name" varchar(100) null, "start_time" timestamp null, "end_time" timestamp null, "breakpoint" boolean not null default false, primary key ("version"))'
+            ],
+        ];
+        $data = [];
+        foreach ($tables as $testName => $t) {
+            $table = [];
+            $table['table'] = new Table($t['name'], $t['options']);
+            foreach ($t['columns'] as $col) {
+                $column = new Column();
+                foreach ($col as $key => $value) {
+                    $column->{'set' . ucfirst($key)}($value);
+                }
+                $table['columns'][] = $column;
+            }
+            $table['indexes'] = $t['indexes'];
+            $table['expected'] = $t['expected'];
+            $data[$testName] = $table;
+        }
+        return $data;
     }
 
 

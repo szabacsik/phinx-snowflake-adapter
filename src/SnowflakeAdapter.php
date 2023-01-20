@@ -70,7 +70,25 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function createTable(Table $table, array $columns = [], array $indexes = []): void
     {
-        // TODO: Implement createTable() method.
+        $separator = ', ';
+        $sql = "create table {$this->quoteTableName($table->getName())} (";
+        foreach ($columns as $column) {
+            $sql .= $this->quoteColumnName($column->getName()) . ' ' . $this->getColumnSqlDefinition($column) . $separator;
+        }
+
+        if (isset($table->getOptions()['primary_key'])) {
+            $sql .= 'primary key ("';
+            $sql .= (
+                is_array($table->getOptions()['primary_key'])
+                    ? implode('", "', $table->getOptions()['primary_key'])
+                    : $table->getOptions()['primary_key']
+                ) . '")';
+        }
+
+        $sql = rtrim($sql, $separator);
+        $sql .= ')';
+
+        $this->execute($sql);
     }
 
     public function truncateTable(string $tableName): void
@@ -252,7 +270,7 @@ class SnowflakeAdapter extends PdoAdapter
         }
 
         $synonymousWithNumberWithoutPrecisionAndScale = [
-            'int', 'integer', 'bigint', 'smallint', 'tinyint', 'byteint'
+            'int', 'integer', 'bigint', 'smallint', 'tinyint', 'byteint', 'biginteger'
         ];
         if (in_array($column->getType(), $synonymousWithNumberWithoutPrecisionAndScale)) {
             $def = 'number';
@@ -316,7 +334,7 @@ class SnowflakeAdapter extends PdoAdapter
 
         $column->isNull() ? $def .= ' null' : $def .= ' not null';
 
-        if ($column->getDefault()) {
+        if (!is_null($column->getDefault())) {
             if ('null' != $column->getDefault()) {
                 $numeric = array_merge($synonymousWithNumber, $synonymousWithNumberWithoutPrecisionAndScale, $synonymousWithFloat);
                 $string = array_merge($synonymousWithVarchar, ['time', 'date'], $timestamps);
@@ -331,6 +349,8 @@ class SnowflakeAdapter extends PdoAdapter
                     $def .= ' default ' . floatval($column->getDefault());
                 } elseif (in_array($column->getType(), $string)) {
                     $def .= " default '{$column->getDefault()}'";
+                } elseif ($column->getType() === 'boolean' && is_bool($column->getDefault())) {
+                    $def .= ' default ' . ($column->getDefault() ? 'true' : 'false');
                 }
             } else {
                 $def .= ' default null';
