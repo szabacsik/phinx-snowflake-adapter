@@ -10,6 +10,9 @@ use Phinx\Db\Table\ForeignKey;
 use Phinx\Db\Table\Index;
 use Phinx\Db\Table\Table;
 use Phinx\Db\Util\AlterInstructions;
+use Phinx\Config\Config;
+use RuntimeException;
+use PDOException;
 
 class SnowflakeAdapter extends PdoAdapter
 {
@@ -367,6 +370,41 @@ class SnowflakeAdapter extends PdoAdapter
         }
 
         return $def;
+    }
+
+    public function getVersionLog(): array
+    {
+        if (!isset($this->options['version_order'])) {
+            throw new RuntimeException('Invalid version_order configuration option');
+        }
+
+        $orderBy = match ($this->options['version_order']) {
+            Config::VERSION_ORDER_CREATION_TIME => "{$this->quoteColumnName('version')} asc",
+            Config::VERSION_ORDER_EXECUTION_TIME =>
+                "{$this->quoteColumnName('start_time')} asc, " .
+                "{$this->quoteColumnName('version')} asc",
+        };
+
+        // This will throw an exception if doing a --dry-run without any migrations as phinxlog
+        // does not exist, so in that case, we can just expect to trivially return empty set
+        try {
+            $rows = $this->fetchAll(sprintf(
+                'select * from %s order by %s',
+                $this->quoteTableName($this->getSchemaTableName()), $orderBy
+            ));
+        } catch (PDOException $e) {
+            if (!$this->isDryRunEnabled()) {
+                throw $e;
+            }
+            $rows = [];
+        }
+
+        $result = [];
+        foreach ($rows as $version) {
+            $result[(int)$version['version']] = $version;
+        }
+
+        return $result;
     }
 
 }

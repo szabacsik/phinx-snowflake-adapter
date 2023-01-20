@@ -6,6 +6,7 @@ use Phinx\Db\Table\Column;
 use Phinx\Db\Table\Table;
 use PHPUnit\Framework\TestCase;
 use Szabacsik\Phinx\SnowflakeAdapter;
+use Phinx\Config\Config;
 
 class SnowflakeAdapterTest extends TestCase
 {
@@ -324,6 +325,34 @@ class SnowflakeAdapterTest extends TestCase
             ->with($expected)
             ->willReturn($statement);
         $mock->hasColumn($tableName, $columnName);
+    }
+
+    /**
+     * @dataProvider getVersionLogDataProvider
+     */
+    public function testGetVersionLog(array $options, $expected)
+    {
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
+        $mock->setOptions($options);
+        $mock->expects($this->once())
+            ->method('fetchAll')
+            ->with($expected)
+            ->willReturn([]);
+        $mock->getVersionLog();
+    }
+
+    public function getVersionLogDataProvider(): array
+    {
+        return [
+            Config::VERSION_ORDER_CREATION_TIME => [
+                ['version_order' => Config::VERSION_ORDER_CREATION_TIME],
+                'select * from "phinxlog" order by "version" asc'
+            ],
+            Config::VERSION_ORDER_EXECUTION_TIME => [
+                ['version_order' => Config::VERSION_ORDER_EXECUTION_TIME],
+                'select * from "phinxlog" order by "start_time" asc, "version" asc'
+            ],
+        ];
     }
 
 }
