@@ -401,6 +401,9 @@ class SnowflakeAdapter extends PdoAdapter
 
         $result = [];
         foreach ($rows as $version) {
+            $version['breakpoint'] = in_array(
+                $version['breakpoint'], [0, '0', false, 'false', '', null], true
+            ) ? 0 : 1;
             $result[(int)$version['version']] = $version;
         }
 

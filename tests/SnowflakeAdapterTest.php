@@ -330,26 +330,74 @@ class SnowflakeAdapterTest extends TestCase
     /**
      * @dataProvider getVersionLogDataProvider
      */
-    public function testGetVersionLog(array $options, $expected)
+    public function testGetVersionLog(array $options, array $rows, string $expected)
     {
         $mock = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
         $mock->setOptions($options);
         $mock->expects($this->once())
             ->method('fetchAll')
             ->with($expected)
-            ->willReturn([]);
-        $mock->getVersionLog();
+            ->willReturn($rows);
+        $versionLog = $mock->getVersionLog();
+        $this->assertCount(count($rows), $versionLog);
+        foreach ($rows as $row) {
+            if (in_array($row['breakpoint'], [1, '1', 'true', true], true)) {
+                $this->assertEquals(1, $versionLog[$row['version']]['breakpoint'], 'Failed breakpoint with version: ' . $row['version'] . '.');
+            } else {
+                $this->assertEquals(0, $versionLog[$row['version']]['breakpoint'], 'Failed breakpoint with version: ' . $row['version'] . '.');
+            }
+        }
     }
 
     public function getVersionLogDataProvider(): array
     {
+        $rows = [
+            [
+                'version' => '10001',
+                'breakpoint' => 0,
+            ],
+            [
+                'version' => '10002',
+                'breakpoint' => '0',
+            ],
+            [
+                'version' => '10003',
+                'breakpoint' => '',
+            ],
+            [
+                'version' => '10004',
+                'breakpoint' => null,
+            ],
+            [
+                'version' => '10005',
+                'breakpoint' => false,
+            ],
+            [
+                'version' => '10006',
+                'breakpoint' => 1,
+            ],
+            [
+                'version' => '10007',
+                'breakpoint' => '1',
+            ],
+            [
+                'version' => '10008',
+                'breakpoint' => true,
+            ],
+            [
+                'version' => '10009',
+                'breakpoint' => 'true',
+            ],
+        ];
         return [
             Config::VERSION_ORDER_CREATION_TIME => [
                 ['version_order' => Config::VERSION_ORDER_CREATION_TIME],
+                $rows,
                 'select * from "phinxlog" order by "version" asc'
             ],
             Config::VERSION_ORDER_EXECUTION_TIME => [
                 ['version_order' => Config::VERSION_ORDER_EXECUTION_TIME],
+                $rows,
                 'select * from "phinxlog" order by "start_time" asc, "version" asc'
             ],
         ];
