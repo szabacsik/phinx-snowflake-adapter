@@ -355,4 +355,175 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider columnTypeDataProvider
+     */
+    public function testIsValidColumnType(Column $column, $valid)
+    {
+        $adapter = new SnowflakeAdapter([]);
+        $this->assertEquals($valid, $adapter->isValidColumnType($column));
+    }
+
+    public function testGetColumnTypes()
+    {
+        $adapter = new SnowflakeAdapter([]);
+        $filtered = array_filter($this->columnTypeDataProvider(), function ($item) {
+            return $item['valid'] === true;
+        });
+        $expected = array_keys($filtered);
+        $this->assertSame($expected, $adapter->getColumnTypes());
+    }
+
+    public function columnTypeDataProvider(): array
+    {
+        $createColumnAndSetType = fn($type) => (new Column)->setType($type);
+        return [
+            'number' => [
+                'column' => $createColumnAndSetType('number'),
+                'valid' => true,
+            ],
+            'decimal' => [
+                'column' => $createColumnAndSetType('decimal'),
+                'valid' => true,
+            ],
+            'numeric' => [
+                'column' => $createColumnAndSetType('numeric'),
+                'valid' => true,
+            ],
+            'int' => [
+                'column' => $createColumnAndSetType('int'),
+                'valid' => true,
+            ],
+            'integer' => [
+                'column' => $createColumnAndSetType('integer'),
+                'valid' => true,
+            ],
+            'bigint' => [
+                'column' => $createColumnAndSetType('bigint'),
+                'valid' => true,
+            ],
+            'smallint' => [
+                'column' => $createColumnAndSetType('smallint'),
+                'valid' => true,
+            ],
+            'tinyint' => [
+                'column' => $createColumnAndSetType('tinyint'),
+                'valid' => true,
+            ],
+            'byteint' => [
+                'column' => $createColumnAndSetType('byteint'),
+                'valid' => true,
+            ],
+            'float' => [
+                'column' => $createColumnAndSetType('float'),
+                'valid' => true,
+            ],
+            'float4' => [
+                'column' => $createColumnAndSetType('float4'),
+                'valid' => true,
+            ],
+            'float8' => [
+                'column' => $createColumnAndSetType('float8'),
+                'valid' => true,
+            ],
+            'double' => [
+                'column' => $createColumnAndSetType('double'),
+                'valid' => true,
+            ],
+            'double precision' => [
+                'column' => $createColumnAndSetType('double precision'),
+                'valid' => true,
+            ],
+            'real' => [
+                'column' => $createColumnAndSetType('real'),
+                'valid' => true,
+            ],
+            'varchar' => [
+                'column' => $createColumnAndSetType('varchar'),
+                'valid' => true,
+            ],
+            'char' => [
+                'column' => $createColumnAndSetType('char'),
+                'valid' => true,
+            ],
+            'character' => [
+                'column' => $createColumnAndSetType('character'),
+                'valid' => true,
+            ],
+            'string' => [
+                'column' => $createColumnAndSetType('string'),
+                'valid' => true,
+            ],
+            'text' => [
+                'column' => $createColumnAndSetType('text'),
+                'valid' => true,
+            ],
+            'binary' => [
+                'column' => $createColumnAndSetType('binary'),
+                'valid' => true,
+            ],
+            'varbinary' => [
+                'column' => $createColumnAndSetType('varbinary'),
+                'valid' => true,
+            ],
+            'boolean' => [
+                'column' => $createColumnAndSetType('boolean'),
+                'valid' => true,
+            ],
+            'date' => [
+                'column' => $createColumnAndSetType('date'),
+                'valid' => true,
+            ],
+            'datetime' => [
+                'column' => $createColumnAndSetType('datetime'),
+                'valid' => true,
+            ],
+            'time' => [
+                'column' => $createColumnAndSetType('time'),
+                'valid' => true,
+            ],
+            'timestamp' => [
+                'column' => $createColumnAndSetType('timestamp'),
+                'valid' => true,
+            ],
+            'timestamp_ltz' => [
+                'column' => $createColumnAndSetType('timestamp_ltz'),
+                'valid' => true,
+            ],
+            'timestamp_ntz' => [
+                'column' => $createColumnAndSetType('timestamp_ntz'),
+                'valid' => true,
+            ],
+            'timestamp_tz' => [
+                'column' => $createColumnAndSetType('timestamp_tz'),
+                'valid' => true,
+            ],
+            'variant' => [
+                'column' => $createColumnAndSetType('variant'),
+                'valid' => true,
+            ],
+            'object' => [
+                'column' => $createColumnAndSetType('object'),
+                'valid' => true,
+            ],
+            'array' => [
+                'column' => $createColumnAndSetType('array'),
+                'valid' => true,
+            ],
+            'geography' => [
+                'column' => $createColumnAndSetType('geography'),
+                'valid' => true,
+            ],
+            'geometry' => [
+                'column' => $createColumnAndSetType('geometry'),
+                'valid' => true,
+            ],
+            'invalid' => [
+                'column' => $createColumnAndSetType('invalid'),
+                'valid' => false,
+            ],
+        ];
+    }
+
+
 }
