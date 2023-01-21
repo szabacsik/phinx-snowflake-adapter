@@ -407,4 +407,84 @@ class SnowflakeAdapter extends PdoAdapter
         return $result;
     }
 
+    public function getColumnTypes(): array
+    {
+        //Summary of Data Types
+        //https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.html
+
+        //Numeric Data Types
+        //https://docs.snowflake.com/en/sql-reference/data-types-numeric.html
+        $numeric = [
+            'number',
+            'decimal',
+            'numeric',
+            'int',
+            'integer',
+            'bigint',
+            'smallint',
+            'tinyint',
+            'byteint',
+            'float',
+            'float4',
+            'float8',
+            'double',
+            'double precision',
+            'real',
+        ];
+
+        //String & Binary Data Types
+        //https://docs.snowflake.com/en/sql-reference/data-types-text.html
+        $string = [
+            'varchar',
+            'char',
+            'character',
+            'string',
+            'text',
+            'binary',
+            'varbinary',
+        ];
+
+        //Logical Data Types
+        //https://docs.snowflake.com/en/sql-reference/data-types-logical.html
+        $logical = [
+            'boolean',
+        ];
+
+        //Date & Time Data Types
+        //https://docs.snowflake.com/en/sql-reference/data-types-datetime.html
+        $datetime = [
+            'date',
+            'datetime',
+            'time',
+            'timestamp',
+            'timestamp_ltz',
+            'timestamp_ntz',
+            'timestamp_tz',
+        ];
+
+        //Semi-structured Data Types
+        //https://docs.snowflake.com/en/sql-reference/data-types-semistructured.html
+        $semistructured = [
+            'variant',
+            'object',
+            'array',
+        ];
+
+        //Geospatial Data Types
+        //https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html
+        $geospatial = [
+            'geography',
+            'geometry',
+        ];
+
+        return array_merge($numeric, $string, $logical, $datetime, $semistructured, $geospatial);
+
+    }
+
+    public function isValidColumnType(Column $column): bool
+    {
+        return in_array($column->getType(), $this->getColumnTypes(), true);
+    }
+
+
 }
