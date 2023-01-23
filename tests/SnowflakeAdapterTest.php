@@ -620,5 +620,19 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals("drop column \"$columnName\"", $alterInstructions->getAlterParts()[0]);
     }
 
+    public function testGetRenameColumnInstructions()
+    {
+        $tableName = 'table';
+        $columnName = 'column';
+        $newColumnName = 'new_column';
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getRenameColumnInstructions');
+        $alterInstructions = $method->invoke($adapter, $tableName, $columnName, $newColumnName);
+        $this->assertInstanceOf(AlterInstructions::class, $alterInstructions);
+        $this->assertCount(1, $alterInstructions->getAlterParts());
+        $this->assertEquals("rename column \"$columnName\" \"$newColumnName\"", $alterInstructions->getAlterParts()[0]);
+    }
+
 
 }

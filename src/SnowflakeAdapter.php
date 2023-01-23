@@ -177,9 +177,17 @@ class SnowflakeAdapter extends PdoAdapter
         )]);
     }
 
+    /**
+     * @link https://docs.snowflake.com/en/sql-reference/sql/alter-table.html
+     */
     protected function getRenameColumnInstructions(string $tableName, string $columnName, string $newColumnName): AlterInstructions
     {
-        // TODO: Implement getRenameColumnInstructions() method.
+        // rename column old_name to new_name;
+        return new AlterInstructions([sprintf(
+            'rename column %s %s',
+            $this->quoteColumnName($columnName),
+            $this->quoteColumnName($newColumnName)
+        )]);
     }
 
     protected function getChangeColumnInstructions(string $tableName, string $columnName, Column $newColumn): AlterInstructions
