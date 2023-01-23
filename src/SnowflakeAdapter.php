@@ -165,9 +165,16 @@ class SnowflakeAdapter extends PdoAdapter
         // TODO: Implement getDecoratedConnection() method.
     }
 
+    /**
+     * @link https://docs.snowflake.com/en/sql-reference/sql/alter-table.html
+     */
     protected function getAddColumnInstructions(Table $table, Column $column): AlterInstructions
     {
-        // TODO: Implement getAddColumnInstructions() method.
+        return new AlterInstructions([sprintf(
+            'add %s %s',
+            $this->quoteColumnName($column->getName()),
+            $this->getColumnSqlDefinition($column)
+        )]);
     }
 
     protected function getRenameColumnInstructions(string $tableName, string $columnName, string $newColumnName): AlterInstructions

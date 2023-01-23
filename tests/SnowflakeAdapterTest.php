@@ -588,4 +588,23 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertSame("drop table \"$tableName\"", $alterInstructions->getPostSteps()[0]);
     }
 
+    public function testGetAddColumnInstructions()
+    {
+        $tableName = 'table';
+        $columnName = 'column';
+        $columnType = 'varchar';
+        $table = new Table($tableName);
+        $column = new Column();
+        $column->setName($columnName);
+        $column->setType($columnType);
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getAddColumnInstructions');
+        $method->setAccessible(true);
+        $alterInstructions = $method->invoke($adapter, $table, $column);
+        $this->assertInstanceOf(AlterInstructions::class, $alterInstructions);
+        $this->assertCount(1, $alterInstructions->getAlterParts());
+        $this->assertEquals("add \"$columnName\" $columnType null", $alterInstructions->getAlterParts()[0]);
+    }
+
 }
