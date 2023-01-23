@@ -7,6 +7,8 @@ use Phinx\Db\Table\Table;
 use PHPUnit\Framework\TestCase;
 use Szabacsik\Phinx\SnowflakeAdapter;
 use Phinx\Config\Config;
+use ReflectionObject;
+use Phinx\Db\Util\AlterInstructions;
 
 class SnowflakeAdapterTest extends TestCase
 {
@@ -573,5 +575,17 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
+    public function testGetDropTableInstructions()
+    {
+        $tableName = 'table';
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getDropTableInstructions');
+        $method->setAccessible(true);
+        $alterInstructions = $method->invoke($adapter, $tableName);
+        $this->assertInstanceOf(AlterInstructions::class, $alterInstructions);
+        $this->assertCount(1, $alterInstructions->getPostSteps());
+        $this->assertSame("drop table \"$tableName\"", $alterInstructions->getPostSteps()[0]);
+    }
 
 }

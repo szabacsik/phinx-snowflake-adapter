@@ -217,7 +217,8 @@ class SnowflakeAdapter extends PdoAdapter
 
     protected function getDropTableInstructions(string $tableName): AlterInstructions
     {
-        // TODO: Implement getDropTableInstructions() method.
+        $sql = sprintf('drop table %s', $this->quoteTableName($tableName));
+        return new AlterInstructions([], [$sql]);
     }
 
     protected function getRenameTableInstructions(string $tableName, string $newTableName): AlterInstructions
