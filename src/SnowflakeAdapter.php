@@ -239,9 +239,12 @@ class SnowflakeAdapter extends PdoAdapter
         return new AlterInstructions([], [$sql]);
     }
 
+    /**
+     * @link https://docs.snowflake.com/en/sql-reference/sql/alter-table.html#examples
+     */
     protected function getRenameTableInstructions(string $tableName, string $newTableName): AlterInstructions
     {
-        // TODO: Implement getRenameTableInstructions() method.
+        return new AlterInstructions([sprintf('rename to %s', $this->quoteTableName($newTableName))]);
     }
 
     protected function getChangePrimaryKeyInstructions(Table $table, $newColumns): AlterInstructions
