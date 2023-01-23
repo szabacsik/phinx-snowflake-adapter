@@ -187,9 +187,12 @@ class SnowflakeAdapter extends PdoAdapter
         // TODO: Implement getChangeColumnInstructions() method.
     }
 
+    /**
+     * @link https://docs.snowflake.com/en/sql-reference/sql/alter-table.html
+     */
     protected function getDropColumnInstructions(string $tableName, string $columnName): AlterInstructions
     {
-        // TODO: Implement getDropColumnInstructions() method.
+        return new AlterInstructions([sprintf('drop column %s', $this->quoteColumnName($columnName))]);
     }
 
     protected function getAddIndexInstructions(Table $table, Index $index): AlterInstructions
