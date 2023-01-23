@@ -631,7 +631,7 @@ class SnowflakeAdapterTest extends TestCase
         $alterInstructions = $method->invoke($adapter, $tableName, $columnName, $newColumnName);
         $this->assertInstanceOf(AlterInstructions::class, $alterInstructions);
         $this->assertCount(1, $alterInstructions->getAlterParts());
-        $this->assertEquals("rename column \"$columnName\" \"$newColumnName\"", $alterInstructions->getAlterParts()[0]);
+        $this->assertEquals("rename column \"$columnName\" to \"$newColumnName\"", $alterInstructions->getAlterParts()[0]);
     }
 
 

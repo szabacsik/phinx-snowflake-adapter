@@ -184,7 +184,7 @@ class SnowflakeAdapter extends PdoAdapter
     {
         // rename column old_name to new_name;
         return new AlterInstructions([sprintf(
-            'rename column %s %s',
+            'rename column %s to %s',
             $this->quoteColumnName($columnName),
             $this->quoteColumnName($newColumnName)
         )]);
