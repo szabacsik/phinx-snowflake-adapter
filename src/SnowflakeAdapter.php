@@ -73,6 +73,28 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function createTable(Table $table, array $columns = [], array $indexes = []): void
     {
+        $options = $table->getOptions();
+
+        $hasIdColumn = array_filter($columns, function ($column) {
+            return $column->getName() === 'id';
+        });
+
+        if (!$hasIdColumn && (!isset($options['id']) || ($options['id'] === true))) {
+            $options['id'] = 'id';
+        }
+
+        if (isset($options['id']) && is_string($options['id'])) {
+            $column = new Column();
+            $column->setName($options['id'])
+                ->setType('number')
+                ->setOptions(['identity' => true])
+                ->setProperties(['primary key']);
+            if (isset($options['limit'])) {
+                $column->setLimit($options['limit']);
+            }
+            array_unshift($columns, $column);
+        }
+
         $separator = ', ';
         $sql = "create table {$this->quoteTableName($table->getName())} (";
         foreach ($columns as $column) {

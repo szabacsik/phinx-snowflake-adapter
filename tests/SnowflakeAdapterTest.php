@@ -270,17 +270,17 @@ class SnowflakeAdapterTest extends TestCase
     public function createTableDataProvider(): array
     {
         $tables = [
-            'my_awesome_table' => [
+            'table with id column explicitly set' => [
                 'name' => 'my_awesome_table',
                 'options' => ['primary_key' => ['lorem', 'ipsum']],
                 'indexes' => [],
                 'columns' => [
-                    ['type' => 'number', 'name' => 'id', 'null' => false, 'identity' => true],
+                    ['type' => 'number', 'name' => 'id', 'null' => false, 'identity' => true, 'properties' => ['primary key']],
                     ['type' => 'varchar', 'name' => 'varchar', 'null' => false, 'identity' => false],
                     ['type' => 'datetime', 'name' => 'datetime', 'null' => false, 'identity' => false],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("id" number identity not null, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("lorem", "ipsum"))',
+                    'create table "my_awesome_table" ("id" number identity not null primary key, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("lorem", "ipsum"))',
             ],
             'phinxlog' => [
                 'name' => 'phinxlog',
@@ -295,6 +295,30 @@ class SnowflakeAdapterTest extends TestCase
                 ],
                 'expected' =>
                     'create table "phinxlog" ("version" number not null, "migration_name" varchar(100) null, "start_time" timestamp null, "end_time" timestamp null, "breakpoint" boolean not null default false, primary key ("version"))'
+            ],
+            'table without id column set' => [
+                'name' => 'my_awesome_table',
+                'options' => [],
+                'indexes' => [],
+                'columns' => [
+                    ['type' => 'number', 'name' => 'number', 'null' => false],
+                    ['type' => 'varchar', 'name' => 'varchar', 'null' => false],
+                    ['type' => 'datetime', 'name' => 'datetime', 'null' => false],
+                ],
+                'expected' =>
+                    'create table "my_awesome_table" ("id" number identity not null primary key, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null)',
+            ],
+            'table with id column name set in options' => [
+                'name' => 'my_awesome_table',
+                'options' => ['id' => 'MyUniqueId'],
+                'indexes' => [],
+                'columns' => [
+                    ['type' => 'number', 'name' => 'number', 'null' => false],
+                    ['type' => 'varchar', 'name' => 'varchar', 'null' => false],
+                    ['type' => 'datetime', 'name' => 'datetime', 'null' => false],
+                ],
+                'expected' =>
+                    'create table "my_awesome_table" ("MyUniqueId" number identity not null primary key, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null)',
             ],
         ];
         $data = [];
