@@ -388,7 +388,8 @@ class SnowflakeAdapter extends PdoAdapter
                 $string = array_merge($synonymousWithVarchar, ['time', 'date'], $timestamps);
                 $functions = [
                     'current_timestamp', 'sysdate', 'convert_timezone', 'to_varchar',
-                    'to_timestamp', 'to_timestamp_tz', 'to_timestamp_ntz'
+                    'to_timestamp', 'to_timestamp_tz', 'to_timestamp_ntz',
+                    'uuid_string',
                 ];
                 $matches = preg_grep("/" . implode("|", $functions) . "/i", array($column->getDefault()));
                 if (!empty($matches)) {

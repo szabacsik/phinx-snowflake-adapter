@@ -320,6 +320,17 @@ class SnowflakeAdapterTest extends TestCase
                 'expected' =>
                     'create table "my_awesome_table" ("MyUniqueId" number identity not null primary key, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null)',
             ],
+            'table using UUID for the primary id column' => [
+                'name' => 'my_awesome_table',
+                'options' => [],
+                'indexes' => [],
+                'columns' => [
+                    ['type' => 'varchar', 'name' => 'id', 'limit' => 36, 'null' => false, 'properties' => ['primary key'], 'default' => 'uuid_string()'],
+                    ['type' => 'number', 'name' => 'other'],
+                ],
+                'expected' =>
+                    'create table "my_awesome_table" ("id" varchar(36) not null default uuid_string() primary key, "other" number null)',
+            ],
         ];
         $data = [];
         foreach ($tables as $testName => $t) {
