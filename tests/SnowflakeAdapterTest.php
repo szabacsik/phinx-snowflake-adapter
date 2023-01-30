@@ -331,6 +331,18 @@ class SnowflakeAdapterTest extends TestCase
                 'expected' =>
                     'create table "my_awesome_table" ("id" varchar(36) not null default uuid_string() primary key, "other" number null)',
             ],
+            'Let’s disable the automatic id column and create a primary key using two columns' => [
+                'name' => 'followers',
+                'options' => ['id' => false, 'primary_key' => ['user_id', 'follower_id']],
+                'indexes' => [],
+                'columns' => [
+                    ['name' => 'user_id', 'type' => 'integer'],
+                    ['name' => 'follower_id', 'type' => 'integer'],
+                    ['name' => 'created', 'type' => 'datetime'],
+                ],
+                'expected' =>
+                    'create table "followers" ("user_id" number null, "follower_id" number null, "created" timestamp_ntz null, primary key ("user_id", "follower_id"))',
+            ],
         ];
         $data = [];
         foreach ($tables as $testName => $t) {
