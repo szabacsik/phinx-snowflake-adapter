@@ -694,5 +694,75 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals("rename to \"$newTableName\"", $alterInstructions->getAlterParts()[0]);
     }
 
+    /**
+     * @dataProvider getChangePrimaryKeyInstructionsDataProvider
+     */
+    public function testGetChangePrimaryKeyInstructions($table, $newColumns, $expected)
+    {
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getChangePrimaryKeyInstructions');
+        if (isset($expected['exception'])) {
+            $this->expectException($expected['exception']);
+        }
+        $alterInstructions = $method->invoke($adapter, $table, $newColumns);
+        if (isset($expected['sql'])) {
+            $this->assertCount(count($expected['sql']), $alterInstructions->getAlterParts());
+            foreach ($expected['sql'] as $index => $sql) {
+                $this->assertEquals($sql, $alterInstructions->getAlterParts()[$index]);
+            }
+        }
+    }
+
+    public function getChangePrimaryKeyInstructionsDataProvider(): array
+    {
+        return [
+            '`newColumns` type is invalid' => [
+                'table' => new Table('table'),
+                'newColumns' => 42,
+                'expected' => [
+                    'exception' => \InvalidArgumentException::class,
+                    'sql' => [],
+                ]
+            ],
+            '`newColumns` array element with invalid type' => [
+                'table' => new Table('table'),
+                'newColumns' => ['lorem', 42],
+                'expected' => [
+                    'exception' => \InvalidArgumentException::class,
+                    'sql' => [],
+                ]
+            ],
+            '`newColumns` is null' => [
+                'table' => new Table('table'),
+                'newColumns' => null,
+                'expected' => [
+                    'sql' => [
+                        'drop primary key'
+                    ],
+                ]
+            ],
+            '`newColumns` is string' => [
+                'table' => new Table('table'),
+                'newColumns' => 'column',
+                'expected' => [
+                    'sql' => [
+                        'drop primary key',
+                        'add primary key ("column")'
+                    ],
+                ]
+            ],
+            '`newColumns` is array of strings' => [
+                'table' => new Table('table'),
+                'newColumns' => ['column1', 'column2', 'column3'],
+                'expected' => [
+                    'sql' => [
+                        'drop primary key',
+                        'add primary key ("column1","column2","column3")'
+                    ],
+                ]
+            ],
+        ];
+    }
 
 }

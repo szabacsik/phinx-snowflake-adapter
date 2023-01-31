@@ -271,7 +271,38 @@ class SnowflakeAdapter extends PdoAdapter
 
     protected function getChangePrimaryKeyInstructions(Table $table, $newColumns): AlterInstructions
     {
-        // TODO: Implement getChangePrimaryKeyInstructions() method.
+        $types = ['string', 'array', 'NULL'];
+        if (!in_array(gettype($newColumns), $types)) {
+            throw new \InvalidArgumentException(
+                sprintf('The type of the $newColumns argument must be one of `%s`',
+                    strtolower(implode('`,`', $types))
+                )
+            );
+        }
+        if (is_array($newColumns)) {
+            if (array_filter($newColumns, 'is_string') != $newColumns) {
+                throw new \InvalidArgumentException('Only strings are allowed in $newColumns array elements.');
+            }
+        }
+
+        $instructions = new AlterInstructions();
+        $instructions->addAlter('drop primary key');
+
+        if (!$newColumns) {
+            return $instructions;
+        }
+
+        if (is_string($newColumns)) {
+            $newColumns = [$newColumns];
+        }
+
+        $sql = 'add primary key (';
+        $sql .= implode(',', array_map([$this, 'quoteColumnName'], $newColumns));
+        $sql .= ')';
+
+        $instructions->addAlter($sql);
+
+        return $instructions;
     }
 
     protected function getChangeCommentInstructions(Table $table, ?string $newComment): AlterInstructions
