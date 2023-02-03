@@ -565,5 +565,16 @@ class SnowflakeAdapter extends PdoAdapter
         return in_array($column->getType(), $this->getColumnTypes(), true);
     }
 
+    protected function executeAlterSteps(string $tableName, AlterInstructions $instructions): void
+    {
+        foreach ($instructions->getAlterParts() as $alterPart) {
+            $this->execute(sprintf('alter table %s %s', $this->quoteTableName($tableName), $alterPart));
+        }
+
+        //TODO: Implement execute post steps
+        foreach ($instructions->getPostSteps() as $postStep) {
+        }
+    }
+
 
 }

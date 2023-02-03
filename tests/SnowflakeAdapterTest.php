@@ -765,4 +765,58 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider executeAlterStepsDataProvider
+     */
+    public function testExecuteAlterSteps(string $tableName, AlterInstructions $instructions, array $expected)
+    {
+        $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['execute']);
+        $reflection = new ReflectionObject($adapter);
+        $executeAlterStepsMethod = $reflection->getMethod('executeAlterSteps');
+        $adapter
+            ->expects($this->exactly(count($expected)))
+            ->method('execute')
+            ->withConsecutive([$expected[0]], [$expected[1] ?? '']);
+        $executeAlterStepsMethod->invoke($adapter, $tableName, $instructions);
+    }
+
+    public function executeAlterStepsDataProvider()
+    {
+        $tableName = 'table';
+        $newColumns = ['column1', 'column2', 'column3'];
+        $newColumn = 'column';
+        $table = new Table($tableName);
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $getChangePrimaryKeyInstructionsMethod = $reflection->getMethod('getChangePrimaryKeyInstructions');
+        $changePrimaryKeyWithoutColumnInstructions = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, null);
+        $changePrimaryKeySingleColumnInstructions = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, $newColumn);
+        $changePrimaryKeyManyColumnsInstructions = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, $newColumns);
+        return [
+            'change primary key, without column' => [
+                'tableName' => $tableName,
+                'instructions' => $changePrimaryKeyWithoutColumnInstructions,
+                'expected' => [
+                    sprintf('alter table "%s" drop primary key', $tableName),
+                ]
+            ],
+            'change primary key, single column' => [
+                'tableName' => $tableName,
+                'instructions' => $changePrimaryKeySingleColumnInstructions,
+                'expected' => [
+                    sprintf('alter table "%s" drop primary key', $tableName),
+                    sprintf('alter table "%s" add primary key ("%s")', $tableName, $newColumn),
+                ]
+            ],
+            'change primary key, many columns' => [
+                'tableName' => $tableName,
+                'instructions' => $changePrimaryKeyManyColumnsInstructions,
+                'expected' => [
+                    sprintf('alter table "%s" drop primary key', $tableName),
+                    sprintf('alter table "%s" add primary key ("%s")', $tableName, implode('","', $newColumns)),
+                ]
+            ],
+        ];
+    }
+
 }
