@@ -127,7 +127,7 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function truncateTable(string $tableName): void
     {
-        // TODO: Implement truncateTable() method.
+        $this->execute(sprintf('truncate table %s', $this->quoteTableName($tableName)));
     }
 
     public function getColumns(string $tableName): array

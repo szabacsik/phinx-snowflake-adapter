@@ -864,5 +864,12 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals([$expected], $instructions->getPostSteps());
     }
 
+    public function testTruncateTable()
+    {
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['execute']);
+        $mock->expects($this->once())->method('execute')->with('truncate table "table"');
+        $mock->truncateTable('table');
+    }
+
 
 }
