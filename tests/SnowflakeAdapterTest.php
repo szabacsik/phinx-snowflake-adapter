@@ -343,6 +343,18 @@ class SnowflakeAdapterTest extends TestCase
                 'expected' =>
                     'create table "followers" ("user_id" number null, "follower_id" number null, "created" timestamp_ntz null, primary key ("user_id", "follower_id"))',
             ],
+            'Add unique constraint' => [
+                'name' => 'table',
+                'options' => ['id' => false, 'unique' => ['column1', 'column2']],
+                'indexes' => [],
+                'columns' => [
+                    ['name' => 'column1', 'type' => 'integer'],
+                    ['name' => 'column2', 'type' => 'integer'],
+                    ['name' => 'created', 'type' => 'datetime'],
+                ],
+                'expected' =>
+                    'create table "table" ("column1" number null, "column2" number null, "created" timestamp_ntz null, unique ("column1", "column2"))',
+            ],
         ];
         $data = [];
         foreach ($tables as $testName => $t) {

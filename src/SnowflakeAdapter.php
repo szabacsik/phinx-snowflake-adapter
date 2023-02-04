@@ -110,6 +110,15 @@ class SnowflakeAdapter extends PdoAdapter
                 ) . '")';
         }
 
+        if (isset($table->getOptions()['unique'])) {
+            $sql .= 'unique ("';
+            $sql .= (
+                is_array($table->getOptions()['unique'])
+                    ? implode('", "', $table->getOptions()['unique'])
+                    : $table->getOptions()['unique']
+                ) . '")';
+        }
+
         $sql = rtrim($sql, $separator);
         $sql .= ')';
 
