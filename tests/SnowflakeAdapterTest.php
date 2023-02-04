@@ -819,6 +819,11 @@ class SnowflakeAdapterTest extends TestCase
                     sprintf('alter table "%s" add primary key ("%s")', $tableName, implode('","', $newColumns)),
                 ]
             ],
+            'instruction with string post steps' => [
+                'tableName' => $tableName,
+                'instructions' => new AlterInstructions([], ['lorem', 'ipsum']),
+                'expected' => ['lorem', 'ipsum']
+            ],
         ];
     }
 
@@ -832,5 +837,20 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertFalse($mock->hasPrimaryKey('table', []));
         $this->assertTrue($mock->hasPrimaryKey('table', []));
     }
+
+    public function testGetChangeCommentInstructions()
+    {
+        $table = new Table('table');
+        $comment = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+        $expected = sprintf("comment on table \"%s\" is '%s'", $table->getName(), $comment);
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getChangeCommentInstructions');
+        $instructions = $method->invoke($adapter, $table, $comment);
+        $this->assertInstanceOf(AlterInstructions::class, $instructions);
+        $this->assertEquals([], $instructions->getAlterParts());
+        $this->assertEquals([$expected], $instructions->getPostSteps());
+    }
+
 
 }

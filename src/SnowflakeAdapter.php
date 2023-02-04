@@ -308,9 +308,17 @@ class SnowflakeAdapter extends PdoAdapter
         return $instructions;
     }
 
+    /**
+     * @param Table $table
+     * @param string|null $newComment
+     * @return AlterInstructions
+     * @see https://docs.snowflake.com/en/sql-reference/sql/comment.html
+     */
     protected function getChangeCommentInstructions(Table $table, ?string $newComment): AlterInstructions
     {
-        // TODO: Implement getChangeCommentInstructions() method.
+        return new AlterInstructions([], [
+            sprintf("comment on table %s is '%s'", $this->quoteTableName($table->getName()), $newComment)
+        ]);
     }
 
     /**
@@ -574,8 +582,14 @@ class SnowflakeAdapter extends PdoAdapter
             $this->execute(sprintf('alter table %s %s', $this->quoteTableName($tableName), $alterPart));
         }
 
-        //TODO: Implement execute post steps
         foreach ($instructions->getPostSteps() as $postStep) {
+            if(is_string($postStep)) {
+                $this->execute($postStep);
+                continue;
+            }
+            if(is_callable($postStep)) {
+                //TODO: Implement execute callable post steps
+            }
         }
     }
 
