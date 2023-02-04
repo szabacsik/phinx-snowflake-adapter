@@ -699,11 +699,13 @@ class SnowflakeAdapterTest extends TestCase
      */
     public function testGetChangePrimaryKeyInstructions($table, $newColumns, $expected)
     {
-        $adapter = new SnowflakeAdapter([]);
+        $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['hasPrimaryKey']);
         $reflection = new ReflectionObject($adapter);
         $method = $reflection->getMethod('getChangePrimaryKeyInstructions');
         if (isset($expected['exception'])) {
             $this->expectException($expected['exception']);
+        } else {
+            $adapter->expects($this->once())->method('hasPrimaryKey')->willReturn(true);
         }
         $alterInstructions = $method->invoke($adapter, $table, $newColumns);
         if (isset($expected['sql'])) {
@@ -780,13 +782,14 @@ class SnowflakeAdapterTest extends TestCase
         $executeAlterStepsMethod->invoke($adapter, $tableName, $instructions);
     }
 
-    public function executeAlterStepsDataProvider()
+    public function executeAlterStepsDataProvider(): array
     {
         $tableName = 'table';
         $newColumns = ['column1', 'column2', 'column3'];
         $newColumn = 'column';
         $table = new Table($tableName);
-        $adapter = new SnowflakeAdapter([]);
+        $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['hasPrimaryKey']);
+        $adapter->expects($this->any())->method('hasPrimaryKey')->willReturn(true);
         $reflection = new ReflectionObject($adapter);
         $getChangePrimaryKeyInstructionsMethod = $reflection->getMethod('getChangePrimaryKeyInstructions');
         $changePrimaryKeyWithoutColumnInstructions = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, null);
@@ -817,6 +820,17 @@ class SnowflakeAdapterTest extends TestCase
                 ]
             ],
         ];
+    }
+
+    public function testHasPrimaryKey()
+    {
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
+        $mock->expects($this->exactly(2))
+            ->method('fetchAll')
+            ->with('show primary keys in "table"')
+            ->willReturnOnConsecutiveCalls([], [['column_name' => 'column1'], ['column_name' => 'column2']]);
+        $this->assertFalse($mock->hasPrimaryKey('table', []));
+        $this->assertTrue($mock->hasPrimaryKey('table', []));
     }
 
 }

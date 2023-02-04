@@ -144,7 +144,7 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function hasPrimaryKey(string $tableName, $columns, ?string $constraint = null): bool
     {
-        // TODO: Implement hasPrimaryKey() method.
+        return !empty($this->getPrimaryKey($tableName));
     }
 
     public function hasForeignKey(string $tableName, $columns, ?string $constraint = null): bool
@@ -286,7 +286,10 @@ class SnowflakeAdapter extends PdoAdapter
         }
 
         $instructions = new AlterInstructions();
-        $instructions->addAlter('drop primary key');
+
+        if ($this->hasPrimaryKey($table->getName(), [])) {
+            $instructions->addAlter('drop primary key');
+        }
 
         if (!$newColumns) {
             return $instructions;
@@ -576,5 +579,9 @@ class SnowflakeAdapter extends PdoAdapter
         }
     }
 
+    public function getPrimaryKey(string $tableName): array
+    {
+        return $this->fetchAll(sprintf('show primary keys in %s', $this->quoteTableName($tableName)));
+    }
 
 }
