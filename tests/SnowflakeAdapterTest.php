@@ -3,6 +3,7 @@
 namespace Szabacsik\Phinx\Tests;
 
 use Phinx\Db\Table\Column;
+use Phinx\Db\Table\ForeignKey;
 use Phinx\Db\Table\Table;
 use PHPUnit\Framework\TestCase;
 use Szabacsik\Phinx\SnowflakeAdapter;
@@ -871,5 +872,66 @@ class SnowflakeAdapterTest extends TestCase
         $mock->truncateTable('table');
     }
 
+    /**
+     * @dataProvider getAddForeignKeyInstructionsDataProvider
+     */
+    public function testGetAddForeignKeyInstructions(Table $table, ForeignKey $foreignKey, array $expected): void
+    {
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getAddForeignKeyInstructions');
+        $instructions = $method->invoke($adapter, $table, $foreignKey);
+        $this->assertInstanceOf(AlterInstructions::class, $instructions);
+        $this->assertEquals($expected, $instructions->getAlterParts());
+    }
+
+    public function getAddForeignKeyInstructionsDataProvider(): array
+    {
+        $table = new Table('table');
+        $referencedTable = new Table('referencedTable');
+        $foreignKey1 = new ForeignKey();
+        $foreignKey1->setOptions([]);
+        $foreignKey1->setOnUpdate('NO_ACTION');
+        $foreignKey1->setOnDelete('NO_ACTION');
+        $foreignKey1->setConstraint('');
+        $foreignKey1->setColumns('column1');
+        $foreignKey1->setReferencedColumns(['referencedColumn1']);
+        $foreignKey1->setReferencedTable($referencedTable);
+
+        $foreignKey2 = new ForeignKey();
+        $foreignKey2->setOptions([]);
+        $foreignKey2->setOnUpdate('NO_ACTION');
+        $foreignKey2->setOnDelete('NO_ACTION');
+        $foreignKey2->setConstraint('myConstraint');
+        $foreignKey2->setColumns('column1');
+        $foreignKey2->setReferencedColumns(['referencedColumn1']);
+        $foreignKey2->setReferencedTable($referencedTable);
+
+        $foreignKey3 = new ForeignKey();
+        $foreignKey3->setOptions([]);
+        $foreignKey3->setOnUpdate('NO_ACTION');
+        $foreignKey3->setOnDelete('NO_ACTION');
+        $foreignKey3->setConstraint('');
+        $foreignKey3->setColumns(['column1', 'column2']);
+        $foreignKey3->setReferencedColumns(['referencedColumn1', 'referencedColumn2']);
+        $foreignKey3->setReferencedTable($referencedTable);
+        return [
+            'columns is string, referenceColumns contains a string, constraint is empty' => [
+                'table' => $table,
+                'foreignKey' => $foreignKey1,
+                'expected' => ['add foreign key ("column1") references "referencedTable"("referencedColumn1")']
+            ],
+            'columns is string, referenceColumns contains a string, constraint is specified' => [
+                'table' => $table,
+                'foreignKey' => $foreignKey2,
+                'expected' => ['add constraint "myConstraint" foreign key ("column1") references "referencedTable"("referencedColumn1")']
+            ],
+            'columns is array, referenceColumns contains two strings, constraint is empty' => [
+                'table' => $table,
+                'foreignKey' => $foreignKey3,
+                'expected' => ['add foreign key ("column1","column2") references "referencedTable"("referencedColumn1","referencedColumn2")']
+            ],
+        ];
+    }
 
 }
