@@ -256,7 +256,7 @@ class SnowflakeAdapter extends PdoAdapter
         $referencedColumns = implode(',', array_map([$this, 'quoteColumnName'], $foreignKey->getReferencedColumns()));
         $referencedTable = $this->quoteTableName($foreignKey->getReferencedTable()->getName());
         $sql = sprintf('add%s foreign key (%s) references %s(%s)', $constraint, $columns, $referencedTable, $referencedColumns);
-        return new AlterInstructions([$sql], ['']);
+        return new AlterInstructions([$sql]);
     }
 
     protected function getDropForeignKeyInstructions(string $tableName, string $constraint): AlterInstructions
