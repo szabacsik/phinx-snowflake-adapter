@@ -934,4 +934,16 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
+    public function testGetDropForeignKeyByColumnsInstructions()
+    {
+        $tableName = 'table';
+        $columns = ['column1', 'column2'];
+        $expected = 'drop foreign key ("column1","column2")';
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getDropForeignKeyByColumnsInstructions');
+        $instructions = $method->invoke($adapter, $tableName, $columns);
+        $this->assertEquals($expected, $instructions->getAlterParts()[0]);
+    }
+
 }
