@@ -10,6 +10,7 @@ use Szabacsik\Phinx\SnowflakeAdapter;
 use Phinx\Config\Config;
 use ReflectionObject;
 use Phinx\Db\Util\AlterInstructions;
+use InvalidArgumentException;
 
 class SnowflakeAdapterTest extends TestCase
 {
@@ -548,6 +549,10 @@ class SnowflakeAdapterTest extends TestCase
                 'column' => $createColumnAndSetType('real'),
                 'valid' => true,
             ],
+            'biginteger' => [
+                'column' => $createColumnAndSetType('biginteger'),
+                'valid' => true,
+            ],
             'varchar' => [
                 'column' => $createColumnAndSetType('varchar'),
                 'valid' => true,
@@ -945,5 +950,59 @@ class SnowflakeAdapterTest extends TestCase
         $instructions = $method->invoke($adapter, $tableName, $columns);
         $this->assertEquals($expected, $instructions->getAlterParts()[0]);
     }
+
+    public function testTableAddColumn()
+    {
+        $adapter = new SnowflakeAdapter([]);
+        $table = new \Phinx\Db\Table('table', [], $adapter);
+        $types = [
+            'decimal',
+            'numeric',
+            'int',
+            'integer',
+            'bigint',
+            'smallint',
+            'tinyint',
+            'byteint',
+            'float',
+            'float4',
+            'float8',
+            'double',
+            'double precision',
+            'real',
+            'biginteger',
+            'varchar',
+            'char',
+            'character',
+            'string',
+            'text',
+            'binary',
+            'varbinary',
+            'boolean',
+            'date',
+            'datetime',
+            'time',
+            'timestamp',
+            'timestamp_ltz',
+            'timestamp_ntz',
+            'timestamp_tz',
+            'variant',
+            'object',
+            'array',
+            'geography',
+            'geometry',
+        ];
+        try {
+            foreach ($types as $type) {
+                $name = $type;
+                $table->addColumn($name, $type);
+            }
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('%s: %s', get_class($exception), $exception->getMessage()));
+        }
+        $this->expectException(InvalidArgumentException::class);
+        $table->addColumn('name', 'invalid_type');
+    }
+
 
 }

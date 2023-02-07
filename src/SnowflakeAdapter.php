@@ -538,6 +538,7 @@ class SnowflakeAdapter extends PdoAdapter
             'double',
             'double precision',
             'real',
+            'biginteger',
         ];
 
         //String & Binary Data Types
