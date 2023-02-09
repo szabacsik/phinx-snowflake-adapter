@@ -425,14 +425,16 @@ class SnowflakeAdapter extends PdoAdapter
             ['timestamp'], $aliases_for_TIMESTAMP_LTZ, $aliases_for_TIMESTAMP_NTZ, $aliases_for_TIMESTAMP_TZ
         );
         if (in_array($column->getType(), $timestamps)) {
-            $def = 'timestamp';
-            if (in_array($column->getType(), $aliases_for_TIMESTAMP_LTZ)) {
+            if('timestamp' === $column->getType()) {
+                $column->getTimezone() ? $def = 'timestamp_tz' : $def = 'timestamp';
+            }
+            elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_LTZ)) {
                 $def = 'timestamp_ltz';
             }
-            if (in_array($column->getType(), $aliases_for_TIMESTAMP_NTZ)) {
+            elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_NTZ)) {
                 $def = 'timestamp_ntz';
             }
-            if (in_array($column->getType(), $aliases_for_TIMESTAMP_TZ)) {
+            elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_TZ)) {
                 $def = 'timestamp_tz';
             }
             if ($column->getPrecision()) {

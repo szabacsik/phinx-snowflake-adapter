@@ -210,6 +210,13 @@ class SnowflakeAdapterTest extends TestCase
                 'default' => "convert_timezone('UTC', 'Europe/Budapest', sysdate())",
                 'expected' => "timestamp_ntz null default convert_timezone('UTC', 'Europe/Budapest', sysdate())"
             ],
+            'timestamp with timezone option set to true' => [
+                'name' => 'field',
+                'type' => 'timestamp',
+                'timezone' => true,
+                'null' => false,
+                'expected' => 'timestamp_tz not null'
+            ],
             'varchar not null' => [
                 'name' => 'field',
                 'type' => 'varchar',
