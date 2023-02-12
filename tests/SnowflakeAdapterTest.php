@@ -1011,5 +1011,472 @@ class SnowflakeAdapterTest extends TestCase
         $table->addColumn('name', 'invalid_type');
     }
 
+    /**
+     * @dataProvider getColumnsDataProvider
+     */
+    public function testGetColumns(array $rows, Column $column)
+    {
+        $tableName = 'table';
+        $mock = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
+        $mock->expects($this->once())
+            ->method('fetchAll')
+            ->with(sprintf('show columns in table "%s"', $tableName))
+            ->willReturn($rows);
+        $columns = $mock->getColumns($tableName);
+        $this->assertCount(1, $columns);
+        $this->assertEquals($column->getName(), $columns[0]->getName(), 'Name');
+        $this->assertEquals($column->getType(), $columns[0]->getType(), 'Type');
+        $this->assertEquals($column->getPrecision(), $columns[0]->getPrecision(), 'Precision');
+        $this->assertEquals($column->getLimit(), $columns[0]->getLimit(), 'Limit');
+        $this->assertEquals($column->getScale(), $columns[0]->getScale(), 'Scale');
+        $this->assertEquals($column->getNull(), $columns[0]->getNull(), 'Nullable');
+        $this->assertEquals($column->getDefault(), $columns[0]->getDefault(), 'Default');
+        $this->assertEquals($column->getComment(), $columns[0]->getComment(), 'Comment');
+        $this->assertEquals($column->getIdentity(), $columns[0]->getIdentity(), 'Identity');
+    }
+
+    public function getColumnsDataProvider(): array
+    {
+        $column1 = new Column();
+        $column1->setName('column1');
+        $column1->setType('number');
+        $column1->setPrecision(38);
+        $column1->setScale(0);
+        $column1->setNull(false);
+        $column1->setDefault('');
+        $column1->setComment('Lorem ipsum dolor sit amet');
+        $column1->setIdentity(true);
+        $column1->setSeed(100);
+        $column1->setIncrement(10);
+
+        $column2 = new Column();
+        $column2->setName('column2');
+        $column2->setType('number');
+        $column2->setPrecision(38);
+        $column2->setScale(0);
+        $column2->setNull(false);
+        $column2->setDefault('');
+        $column2->setComment('Lorem ipsum dolor sit amet');
+        $column2->setIdentity(true);
+        $column2->setSeed(10);
+        $column2->setIncrement(20);
+
+        $column3 = new Column();
+        $column3->setName('column3');
+        $column3->setType('number');
+        $column3->setPrecision(38);
+        $column3->setScale(0);
+        $column3->setNull(false);
+        $column3->setDefault('');
+        $column3->setComment('');
+        $column3->setIdentity(false);
+
+        $column4 = new Column();
+        $column4->setName('column4');
+        $column4->setType('number');
+        $column4->setPrecision(5);
+        $column4->setScale(3);
+        $column4->setNull(true);
+        $column4->setDefault(5.2);
+        $column4->setComment('');
+
+        $column5 = new Column();
+        $column5->setName('column5');
+        $column5->setType('number');
+        $column5->setPrecision(38);
+        $column5->setScale(0);
+        $column5->setNull(true);
+        $column5->setDefault('');
+        $column5->setComment('');
+
+        $column6 = new Column();
+        $column6->setName('column6');
+        $column6->setType('varchar');
+        $column6->setLimit(16777216);
+        $column6->setNull(true);
+        $column6->setDefault('');
+        $column6->setComment('');
+
+        $column7 = new Column();
+        $column7->setName('column7');
+        $column7->setType('varchar');
+        $column7->setLimit(16777216);
+        $column7->setNull(true);
+        $column7->setDefault('CAST(CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)) AS VARCHAR(16777216))');
+        $column7->setComment('');
+
+        $column8 = new Column();
+        $column8->setName('column8');
+        $column8->setType('varchar');
+        $column8->setLimit(10);
+        $column8->setNull(true);
+        $column8->setCollation('en-cs');
+        $column8->setDefault('');
+        $column8->setComment('');
+
+        $column9 = new Column();
+        $column9->setName('column9');
+        $column9->setType('varchar');
+        $column9->setLimit(10);
+        $column9->setNull(false);
+        $column9->setCollation('en-cs');
+        $column9->setDefault('none');
+        $column9->setComment('');
+
+        $column10 = new Column();
+        $column10->setName('column10');
+        $column10->setType('timestamp_ntz');
+        $column10->setPrecision(0);
+        $column10->setScale(9);
+        $column10->setNull(true);
+        $column10->setDefault('CONVERT_TIMEZONE(\'UTC\', \'Europe/Budapest\', CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)))');
+
+        $column11 = new Column();
+        $column11->setName('column11');
+        $column11->setType('timestamp_ntz');
+        $column11->setPrecision(0);
+        $column11->setScale(9);
+        $column11->setNull(true);
+        $column11->setDefault('CAST(\'0001-01-01 00:00:00.000000000\' AS TIMESTAMP_NTZ(9))');
+
+        $column12 = new Column();
+        $column12->setName('column12');
+        $column12->setType('timestamp_ntz');
+        $column12->setPrecision(0);
+        $column12->setScale(9);
+        $column12->setNull(true);
+        $column12->setDefault('CURRENT_TIMESTAMP()');
+
+        $column13 = new Column();
+        $column13->setName('column13');
+        $column13->setType('timestamp_ltz');
+        $column13->setPrecision(0);
+        $column13->setScale(9);
+        $column13->setNull(true);
+        $column13->setDefault('CAST(\'0001-01-01 00:00:00.000000000\' AS TIMESTAMP_NTZ(9))');
+
+        $column14 = new Column();
+        $column14->setName('column14');
+        $column14->setType('timestamp_tz');
+        $column14->setPrecision(0);
+        $column14->setScale(9);
+        $column14->setNull(true);
+        $column14->setDefault('CAST(\'0001-01-01 00:00:00.000000000 +0100\' AS TIMESTAMP_NTZ(9))');
+
+        $column15 = new Column();
+        $column15->setName('column15');
+        $column15->setType('timestamp_ntz');
+        $column15->setPrecision(0);
+        $column15->setScale(9);
+        $column15->setNull(false);
+
+        $column16 = new Column();
+        $column16->setName('column16');
+        $column16->setType('boolean');
+        $column16->setNull(true);
+        $column16->setDefault(false);
+
+        $column17 = new Column();
+        $column17->setName('column17');
+        $column17->setType('boolean');
+        $column17->setNull(true);
+        $column17->setDefault(true);
+
+        $column18 = new Column();
+        $column18->setName('column18');
+        $column18->setType('float');
+        $column18->setNull(true);
+
+        return [
+            'column1' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column1',
+                    'data_type' => '{"type":"FIXED","precision":38,"scale":0,"nullable":false}',
+                    'null?' => 'NOT_NULL',
+                    'default' => '',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => 'Lorem ipsum dolor sit amet',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => 'IDENTITY START 100 INCREMENT 10',
+                ]],
+                'expected' => $column1
+            ],
+            'column2' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column2',
+                    'data_type' => '{"type":"FIXED","precision":38,"scale":0,"nullable":false}',
+                    'null?' => 'NOT_NULL',
+                    'default' => '',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => 'Lorem ipsum dolor sit amet',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => 'IDENTITY START 10 INCREMENT 20',
+                ]],
+                'expected' => $column2,
+            ],
+            'column3' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column3',
+                    'data_type' => '{"type":"FIXED","precision":38,"scale":0,"nullable":false}',
+                    'null?' => 'NOT_NULL',
+                    'default' => '',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column3,
+            ],
+            'column4' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column4',
+                    'data_type' => '{"type":"FIXED","precision":5,"scale":3,"nullable":true}',
+                    'null?' => 'true',
+                    'default' => 5.2,
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column4,
+            ],
+            'column5' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column5',
+                    'data_type' => '{"type":"FIXED","precision":38,"scale":0,"nullable":true}',
+                    'null?' => 'true',
+                    'default' => '',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column5,
+            ],
+            'column6' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column6',
+                    'data_type' => '{"type":"TEXT","length":16777216,"byteLength":16777216,"nullable":true,"fixed":false}',
+                    'null?' => 'true',
+                    'default' => '',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column6,
+            ],
+            'column7' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column7',
+                    'data_type' => '{"type":"TEXT","length":16777216,"byteLength":16777216,"nullable":true,"fixed":false}',
+                    'null?' => 'true',
+                    'default' => 'CAST(CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)) AS VARCHAR(16777216))',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column7,
+            ],
+            'column8' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column8',
+                    'data_type' => '{"type":"TEXT","length":10,"byteLength":40,"nullable":true,"fixed":false,"collation":"en-cs"}',
+                    'null?' => 'true',
+                    'default' => '',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column8,
+            ],
+            'column9' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column9',
+                    'data_type' => '{"type":"TEXT","length":10,"byteLength":40,"nullable":false,"fixed":false,"collation":"en-cs"}',
+                    'null?' => 'NOT_NULL',
+                    'default' => '\'none\'',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column9,
+            ],
+            'column10' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column10',
+                    'data_type' => '{"type":"TIMESTAMP_NTZ","precision":0,"scale":9,"nullable":true}',
+                    'null?' => 'true',
+                    'default' => 'CONVERT_TIMEZONE(\'UTC\', \'Europe/Budapest\', CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)))',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column10,
+            ],
+            'column11' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column11',
+                    'data_type' => '{"type":"TIMESTAMP_NTZ","precision":0,"scale":9,"nullable":true}',
+                    'null?' => 'true',
+                    'default' => 'CAST(\'0001-01-01 00:00:00.000000000\' AS TIMESTAMP_NTZ(9))',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column11,
+            ],
+            'column12' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column12',
+                    'data_type' => '{"type":"TIMESTAMP_NTZ","precision":0,"scale":9,"nullable":true}',
+                    'null?' => 'true',
+                    'default' => 'CURRENT_TIMESTAMP()',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column12,
+            ],
+            'column13' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column13',
+                    'data_type' => '{"type":"TIMESTAMP_LTZ","precision":0,"scale":9,"nullable":true}',
+                    'null?' => 'true',
+                    'default' => 'CAST(\'0001-01-01 00:00:00.000000000\' AS TIMESTAMP_NTZ(9))',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column13,
+            ],
+            'column14' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column14',
+                    'data_type' => '{"type":"TIMESTAMP_TZ","precision":0,"scale":9,"nullable":true}',
+                    'null?' => 'true',
+                    'default' => 'CAST(\'0001-01-01 00:00:00.000000000 +0100\' AS TIMESTAMP_NTZ(9))',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column14,
+            ],
+            'column15' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column15',
+                    'data_type' => '{"type":"TIMESTAMP_NTZ","precision":0,"scale":9,"nullable":false}',
+                    'null?' => 'NOT_NULL',
+                    'default' => '',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column15,
+            ],
+            'column16' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column16',
+                    'data_type' => '{"type":"BOOLEAN","nullable":true}',
+                    'null?' => 'true',
+                    'default' => 'FALSE',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column16,
+            ],
+            'column17' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column17',
+                    'data_type' => '{"type":"BOOLEAN","nullable":true}',
+                    'null?' => 'true',
+                    'default' => 'TRUE',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column17,
+            ],
+            'column18' => [
+                'rows' => [[
+                    'table_name' => 'allin',
+                    'schema_name' => 'TEST_SCHEMA',
+                    'column_name' => 'column18',
+                    'data_type' => '{"type":"REAL","nullable":true}',
+                    'null?' => 'true',
+                    'default' => '',
+                    'kind' => 'COLUMN',
+                    'expression' => '',
+                    'comment' => '',
+                    'database_name' => 'TEST_DATABASE',
+                    'autoincrement' => '',
+                ]],
+                'expected' => $column18,
+            ],
+        ];
+    }
 
 }

@@ -132,7 +132,66 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function getColumns(string $tableName): array
     {
-        // TODO: Implement getColumns() method.
+        $columns = [];
+        $rows = $this->fetchAll(sprintf('show columns in table %s', $this->quoteTableName($tableName)));
+        foreach ($rows as $row) {
+            $name = $row['column_name'];
+            $dataType = json_decode($row['data_type'], true);
+            $types = ['varchar' => 'TEXT', 'number' => 'FIXED', 'float' => 'REAL'];
+            $type = in_array($dataType['type'], $types) ? array_search($dataType['type'], $types) : strtolower($dataType['type']);
+            $precision = $dataType['precision'] ?? null;
+            $scale = $dataType['scale'] ?? null;
+            $length = $dataType['length'] ?? null;
+            $nullable = $dataType['nullable'] ?? $row['null?'] == 'true' ?? false;
+            if (isset($row['default']) && !empty($row['default'])) {
+                switch (gettype($row['default'])) {
+                    case 'string' :
+                        if (!in_array(strtolower($row['default']), ['true', 'false'])) {
+                            $default = preg_replace("/^'|'$/", "", $row['default']);
+                        } else {
+                            $default = filter_var($row['default'], FILTER_VALIDATE_BOOLEAN);
+                        }
+                        break;
+                    case 'NULL':
+                        $default = null;
+                        break;
+                    default:
+                        $default = $row['default'];
+                        break;
+                }
+            } else {
+                $default = null;
+            }
+            $comment = $row['comment'] ?? null;
+            $autoincrement = $row['autoincrement'] ?? '';
+            $identity = (bool)$autoincrement;
+            preg_match_all('!\d+!', $autoincrement, $matches);
+            $seed = $matches[0][0] ?? null;
+            $increment = $matches[0][1] ?? null;
+
+            $column = new Column();
+            $column->setName($name);
+            $column->setType($type);
+            if (isset($dataType['precision'])) {
+                $column->setPrecision($precision);
+            }
+            if (isset($dataType['length'])) {
+                $column->setLimit($length);
+            }
+            $column->setScale($scale);
+            $column->setNull($nullable);
+            $column->setComment($comment);
+            $column->setDefault($default);
+            if (is_numeric($seed)) {
+                $column->setSeed((int)$seed);
+            }
+            if (is_numeric($increment)) {
+                $column->setSeed((int)$increment);
+            }
+            $column->setIdentity($identity);
+            $columns[] = $column;
+        }
+        return $columns;
     }
 
     public function hasColumn(string $tableName, string $columnName): bool
