@@ -13,6 +13,7 @@ use Phinx\Db\Util\AlterInstructions;
 use Phinx\Config\Config;
 use RuntimeException;
 use PDOException;
+use InvalidArgumentException;
 
 class SnowflakeAdapter extends PdoAdapter
 {
@@ -282,7 +283,98 @@ class SnowflakeAdapter extends PdoAdapter
 
     protected function getChangeColumnInstructions(string $tableName, string $columnName, Column $newColumn): AlterInstructions
     {
-        // TODO: Implement getChangeColumnInstructions() method.
+        // https://docs.snowflake.com/en/sql-reference/sql/alter-table-column
+        // https://book.cakephp.org/phinx/0/en/migrations.html#changing-column-attributes
+        $currentColumn = null;
+        $columns = $this->getColumns($tableName);
+        foreach ($columns as $column) {
+            if ($column->getName() === $columnName) {
+                $currentColumn = $column;
+                break;
+            }
+        }
+        if (!$currentColumn) {
+            throw new InvalidArgumentException("The specified column doesn't exist: $columnName");
+        }
+
+        $instruction = new AlterInstructions();
+
+        if ($currentColumn->getType() != $newColumn->getType()) {
+            $instruction->addAlter(sprintf(
+                'alter column %s set data type %s',
+                $this->quoteColumnName($currentColumn->getName()),
+                $newColumn->getType()
+            ));
+        }
+
+        if ($currentColumn->getDefault() != $newColumn->getDefault()) {
+            switch (true) {
+                case empty($newColumn->getDefault()):
+                    $instruction->addAlter(sprintf(
+                        'alter column %s drop default',
+                        $this->quoteColumnName($currentColumn->getName())
+                    ));
+                    break;
+                default:
+                    $instruction->addAlter(sprintf(
+                        'alter column %s set default %s',
+                        $this->quoteColumnName($currentColumn->getName()),
+                        $newColumn->getDefault()
+                    ));
+                    break;
+            }
+        }
+
+        if ($currentColumn->getNull() != $newColumn->getNull()) {
+            $newColumn->isNull()
+                ? $sql = 'alter column %s drop not null'
+                : $sql = 'alter column %s set not null';
+            $instruction->addAlter(
+                sprintf($sql, $this->quoteColumnName($columnName))
+            );
+        }
+
+        if ($currentColumn->getComment() != $newColumn->getComment()) {
+            switch (true) {
+                case empty($newColumn->getComment()):
+                    $sql = sprintf('alter %s unset comment', $this->quoteColumnName($columnName));
+                    break;
+                default:
+                    $sql = sprintf(
+                        "alter %s comment '%s'",
+                        $this->quoteColumnName($columnName),
+                        $newColumn->getComment()
+                    );
+            }
+            $instruction->addAlter($sql);
+        }
+
+        if ('varchar' === $currentColumn->getType() && $currentColumn->getType() === $newColumn->getType()) {
+            if ($currentColumn->getLimit() != $newColumn->getLimit()) {
+                $sql = sprintf(
+                    'alter column %s set data type %s(%s) %s',
+                    $this->quoteColumnName($columnName),
+                    $currentColumn->getType(),
+                    $newColumn->getLimit(),
+                    $currentColumn->getCollation() ? "collate '{$currentColumn->getCollation()}'" : ''
+                );
+                $instruction->addAlter(trim($sql));
+            }
+        }
+
+        if ('number' === $currentColumn->getType() && $currentColumn->getType() === $newColumn->getType()) {
+            if ($currentColumn->getPrecision() != $newColumn->getPrecision()) {
+                $instruction->addAlter(sprintf(
+                    'alter %s set data type number(%s,%s)',
+                    $this->quoteColumnName($currentColumn->getName()),
+                    $newColumn->getPrecision(),
+                    $newColumn->getScale() ?? $currentColumn->getScale()
+                ));
+            }
+        }
+
+        return $instruction;
+
     }
 
     /**
@@ -484,16 +576,13 @@ class SnowflakeAdapter extends PdoAdapter
             ['timestamp'], $aliases_for_TIMESTAMP_LTZ, $aliases_for_TIMESTAMP_NTZ, $aliases_for_TIMESTAMP_TZ
         );
         if (in_array($column->getType(), $timestamps)) {
-            if('timestamp' === $column->getType()) {
+            if ('timestamp' === $column->getType()) {
                 $column->getTimezone() ? $def = 'timestamp_tz' : $def = 'timestamp';
-            }
-            elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_LTZ)) {
+            } elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_LTZ)) {
                 $def = 'timestamp_ltz';
-            }
-            elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_NTZ)) {
+            } elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_NTZ)) {
                 $def = 'timestamp_ntz';
-            }
-            elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_TZ)) {
+            } elseif (in_array($column->getType(), $aliases_for_TIMESTAMP_TZ)) {
                 $def = 'timestamp_tz';
             }
             if ($column->getPrecision()) {
@@ -663,11 +752,11 @@ class SnowflakeAdapter extends PdoAdapter
         }
 
         foreach ($instructions->getPostSteps() as $postStep) {
-            if(is_string($postStep)) {
+            if (is_string($postStep)) {
                 $this->execute($postStep);
                 continue;
             }
-            if(is_callable($postStep)) {
+            if (is_callable($postStep)) {
                 //TODO: Implement execute callable post steps
             }
         }

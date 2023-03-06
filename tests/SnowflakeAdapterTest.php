@@ -1479,4 +1479,249 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
+    /**
+     * @see https://docs.snowflake.com/en/sql-reference/sql/alter-table-column
+     * @dataProvider getChangeColumnInstructionsDataProvider
+     */
+
+    public function testGetChangeColumnInstructions(Column $newColumn, array $columns, AlterInstructions $expectedInstructions)
+    {
+        $tableName = 'table';
+        $columnName = $newColumn->getName();
+        $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['getColumns']);
+        $adapter->expects($this->once())->method('getColumns')->willReturn($columns);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getChangeColumnInstructions');
+        $instructions = $method->invoke($adapter, $tableName, $columnName, $newColumn);
+        $this->assertInstanceOf(AlterInstructions::class, $instructions);
+        $this->assertEquals($expectedInstructions->getAlterParts(), $instructions->getAlterParts());
+    }
+
+    public function getChangeColumnInstructionsDataProvider()
+    {
+        $tests = [];
+        $columnName = 'column';
+
+        //Drop the default for a column
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('varchar');
+        $currentColumn->setDefault('default');
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('varchar');
+        $newColumn->setDefault(null);
+        $instructions = new AlterInstructions([sprintf(
+            'alter column "%s" drop default', $columnName)
+        ]);
+        $tests['Drop the default for a column'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Change the default sequence for a column (i.e. SET DEFAULT seq_name.NEXTVAL)
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('number');
+        $currentColumn->setDefault('sequence_01.nextval');
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('number');
+        $newColumn->setDefault('sequence_02.nextval');
+        $instructions = new AlterInstructions([sprintf(
+            'alter column "%s" set default sequence_02.nextval', $columnName)
+        ]);
+        $tests['Change the default sequence for a column'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Change the nullability of a column (i.e. SET NOT NULL or DROP NOT NULL)
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('varchar');
+        $currentColumn->setNull(true);
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('varchar');
+        $newColumn->setNull(false);
+        $instructions = new AlterInstructions([
+            sprintf('alter column "%s" set not null', $columnName)
+        ]);
+        $tests['Change the nullability of a column (SET)'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('varchar');
+        $currentColumn->setNull(false);
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('varchar');
+        $newColumn->setNull(true);
+        $instructions = new AlterInstructions([
+            sprintf('alter column "%s" drop not null', $columnName)
+        ]);
+        $tests['Change the nullability of a column (DROP)'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Change a column data type to a synonymous type (e.g. STRING to VARCHAR).
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('string');
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('varchar');
+        $instructions = new AlterInstructions([
+            sprintf('alter column "%s" set data type varchar', $columnName)
+        ]);
+        $tests['Change a column data type to a synonymous type'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Increase the length of a text/string column (e.g. VARCHAR(50) to VARCHAR(100))
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('varchar');
+        $currentColumn->setLimit(50);
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('varchar');
+        $newColumn->setLimit(100);
+        $instructions = new AlterInstructions([
+            sprintf('alter column "%s" set data type varchar(100)', $columnName)
+        ]);
+        $tests['Increase the length of a text/string column'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Increase the length of a text/string column with collation
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('varchar');
+        $currentColumn->setLimit(50);
+        $currentColumn->setCollation('en-cs');
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('varchar');
+        $newColumn->setLimit(100);
+        $instructions = new AlterInstructions([
+            sprintf('alter column "%s" set data type varchar(100) collate \'en-cs\'', $columnName)
+        ]);
+        $tests['Increase the length of a text/string column with collation'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Increase the precision of a number column (e.g. NUMBER(10,2) to NUMBER(20,2))
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('number');
+        $currentColumn->setPrecision(10);
+        $currentColumn->setScale(2);
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('number');
+        $newColumn->setPrecision(20);
+        $instructions = new AlterInstructions([
+            sprintf('alter "%s" set data type number(20,2)', $columnName)
+        ]);
+        $tests['Increase the precision of a number column'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Decrease the precision of a number column (e.g. NUMBER(20,2) to NUMBER(10,2))
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('number');
+        $currentColumn->setPrecision(20);
+        $currentColumn->setScale(2);
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('number');
+        $newColumn->setPrecision(10);
+        $instructions = new AlterInstructions([
+            sprintf('alter "%s" set data type number(10,2)', $columnName)
+        ]);
+        $tests['Decrease the precision of a number column'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Unset the comment for a column
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setComment('Lorem Ipsum');
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setComment(null);
+        $instructions = new AlterInstructions([
+            sprintf('alter "%s" unset comment', $columnName)
+        ]);
+        $tests['Unset the comment for a column'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Set the comment for a column
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setComment('Lorem Ipsum');
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setComment('Ipsum Lorem');
+        $instructions = new AlterInstructions([
+            sprintf('alter "%s" comment \'Ipsum Lorem\'', $columnName)
+        ]);
+        $tests['Set the comment for a column'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //Nullable to not nullable and increase the length
+        $currentColumn = new Column();
+        $currentColumn->setName($columnName);
+        $currentColumn->setType('varchar');
+        $currentColumn->setNull(true);
+        $currentColumn->setLimit(42);
+        $newColumn = new Column();
+        $newColumn->setName($columnName);
+        $newColumn->setType('varchar');
+        $newColumn->setNull(false);
+        $newColumn->setLimit(4242);
+        $instructions = new AlterInstructions([
+            sprintf('alter column "%s" set not null', $columnName),
+            sprintf('alter column "%s" set data type varchar(4242)', $columnName),
+        ]);
+        $tests['Nullable to not nullable and increase the length'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
+        //TODO: Set or unset a Column-level Security masking policy on a column.
+
+        //TODO: Set or unset a tag on a column
+
+        return $tests;
+
+    }
+
 }
