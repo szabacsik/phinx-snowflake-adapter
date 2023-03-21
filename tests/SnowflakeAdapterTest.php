@@ -74,7 +74,7 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals($expected, (new SnowflakeAdapter([]))->getColumnSqlDefinition($column));
     }
 
-    public function columnsDataProvider(): array
+    public static function columnsDataProvider(): array
     {
         $precision = 9;
         $scale = 5;
@@ -276,7 +276,7 @@ class SnowflakeAdapterTest extends TestCase
         $mock->createTable($table, $columns, $indexes);
     }
 
-    public function createTableDataProvider(): array
+    public static function createTableDataProvider(): array
     {
         $tables = [
             'table with id column explicitly set' => [
@@ -419,7 +419,7 @@ class SnowflakeAdapterTest extends TestCase
         }
     }
 
-    public function getVersionLogDataProvider(): array
+    public static function getVersionLogDataProvider(): array
     {
         $rows = [
             [
@@ -485,14 +485,14 @@ class SnowflakeAdapterTest extends TestCase
     public function testGetColumnTypes()
     {
         $adapter = new SnowflakeAdapter([]);
-        $filtered = array_filter($this->columnTypeDataProvider(), function ($item) {
+        $filtered = array_filter(static::columnTypeDataProvider(), function ($item) {
             return $item['valid'] === true;
         });
         $expected = array_keys($filtered);
         $this->assertSame($expected, $adapter->getColumnTypes());
     }
 
-    public function columnTypeDataProvider(): array
+    public static function columnTypeDataProvider(): array
     {
         $createColumnAndSetType = fn($type) => (new Column)->setType($type);
         return [
@@ -741,7 +741,7 @@ class SnowflakeAdapterTest extends TestCase
         }
     }
 
-    public function getChangePrimaryKeyInstructionsDataProvider(): array
+    public static function getChangePrimaryKeyInstructionsDataProvider(): array
     {
         return [
             '`newColumns` type is invalid' => [
@@ -814,14 +814,14 @@ class SnowflakeAdapterTest extends TestCase
         }
     }
 
-    public function executeAlterStepsDataProvider(): array
+    public static function executeAlterStepsDataProvider(): array
     {
         $tableName = 'table';
         $newColumns = ['column1', 'column2', 'column3'];
         $newColumn = 'column';
         $table = new Table($tableName);
-        $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['hasPrimaryKey']);
-        $adapter->expects($this->any())->method('hasPrimaryKey')->willReturn(true);
+        $adapter = \Mockery::mock(SnowflakeAdapter::class . '[hasPrimaryKey]', [[]]);
+        $adapter->shouldReceive('hasPrimaryKey')->andReturn(true);
         $reflection = new ReflectionObject($adapter);
         $getChangePrimaryKeyInstructionsMethod = $reflection->getMethod('getChangePrimaryKeyInstructions');
         $changePrimaryKeyWithoutColumnInstructions = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, null);
@@ -904,7 +904,7 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals($expected, $instructions->getAlterParts());
     }
 
-    public function getAddForeignKeyInstructionsDataProvider(): array
+    public static function getAddForeignKeyInstructionsDataProvider(): array
     {
         $table = new Table('table');
         $referencedTable = new Table('referencedTable');
@@ -1042,7 +1042,7 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals($column->getIdentity(), $columns[0]->getIdentity(), 'Identity');
     }
 
-    public function getColumnsDataProvider(): array
+    public static function getColumnsDataProvider(): array
     {
         $column1 = new Column();
         $column1->setName('column1');
@@ -1504,7 +1504,7 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertEquals($expectedInstructions->getAlterParts(), $instructions->getAlterParts());
     }
 
-    public function getChangeColumnInstructionsDataProvider()
+    public static function getChangeColumnInstructionsDataProvider(): array
     {
         $tests = [];
         $columnName = 'column';
