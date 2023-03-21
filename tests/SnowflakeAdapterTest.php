@@ -800,11 +800,18 @@ class SnowflakeAdapterTest extends TestCase
         $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['execute']);
         $reflection = new ReflectionObject($adapter);
         $executeAlterStepsMethod = $reflection->getMethod('executeAlterSteps');
+        $executeMethodParameters = [];
         $adapter
             ->expects($this->exactly(count($expected)))
             ->method('execute')
-            ->withConsecutive([$expected[0]], [$expected[1] ?? '']);
+            ->willReturnCallback(function (...$args) use (&$executeMethodParameters) {
+                $executeMethodParameters[] = $args;
+                return 1;
+            });
         $executeAlterStepsMethod->invoke($adapter, $tableName, $instructions);
+        foreach ($expected as $index => $sql) {
+            $this->assertEquals($sql, $executeMethodParameters[$index][0]);
+        }
     }
 
     public function executeAlterStepsDataProvider(): array
