@@ -11,7 +11,8 @@
     "vimeo/psalm": "*",
     "phpmd/phpmd": "*",
     "ext-pdo": "*",
-    "robmorgan/phinx": "*"
+    "robmorgan/phinx": "*",
+    "mockery/mockery": "*"
   },
   "license": "MIT",
   "autoload": {
