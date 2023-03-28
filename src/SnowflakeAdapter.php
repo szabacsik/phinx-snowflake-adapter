@@ -801,12 +801,13 @@ class SnowflakeAdapter extends PdoAdapter
             $sql = sprintf($sql, $namedParameters);
             $stmt = $this->getConnection()->prepare($sql);
             $vals = [];
-            foreach ($rows as $row) {
-                foreach ($row as $v) {
+            foreach ($rows as $rowIndex => $row) {
+                foreach ($row as $columnName => $v) {
+                    $namedParameter = ":$rowIndex$columnName";
                     if (is_bool($v)) {
-                        $vals[] = $this->castToBool($v);
+                        $vals[$namedParameter] = $this->castToBool($v);
                     } else {
-                        $vals[] = $v;
+                        $vals[$namedParameter] = $v;
                     }
                 }
             }

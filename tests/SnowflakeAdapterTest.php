@@ -1834,11 +1834,11 @@ class SnowflakeAdapterTest extends TestCase
                         "('value1 row3','value2 row3','value3 row3')," .
                         "('value1 row4','value2 row4','value3 row4')",
                     'values' => [
-                        'value1 row0', 'value2 row0', 'value3 row0',
-                        'value1 row1', 'value2 row1', 'value3 row1',
-                        'value1 row2', 'value2 row2', 'value3 row2',
-                        'value1 row3', 'value2 row3', 'value3 row3',
-                        'value1 row4', 'value2 row4', 'value3 row4',
+                        ':0column1' => 'value1 row0', ':0column2' => 'value2 row0', ':0column3' => 'value3 row0',
+                        ':1column1' => 'value1 row1', ':1column2' => 'value2 row1', ':1column3' => 'value3 row1',
+                        ':2column1' => 'value1 row2', ':2column2' => 'value2 row2', ':2column3' => 'value3 row2',
+                        ':3column1' => 'value1 row3', ':3column2' => 'value2 row3', ':3column3' => 'value3 row3',
+                        ':4column1' => 'value1 row4', ':4column2' => 'value2 row4', ':4column3' => 'value3 row4',
                     ]
                 ],
             ]
