@@ -11,6 +11,13 @@ use Phinx\Config\Config;
 use ReflectionObject;
 use Phinx\Db\Util\AlterInstructions;
 use InvalidArgumentException;
+use PDO;
+use PDOStatement;
+use PHPUnit\Framework\MockObject\Exception;
+use Symfony\Component\Console\Input\Input;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\Output;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class SnowflakeAdapterTest extends TestCase
 {
@@ -1729,6 +1736,113 @@ class SnowflakeAdapterTest extends TestCase
 
         return $tests;
 
+    }
+
+    /**
+     * @dataProvider bulkInsertDataProvider
+     * @throws Exception
+     */
+    public function testBulkInsert(array $rows, array $expected)
+    {
+        $input = $this->createStub(Input::class);
+        $output = $this->createStub(Output::class);
+
+        $statement = $this->createPartialMock(PDOStatement::class, ['execute']);
+        $statement
+            ->expects($this->once())
+            ->method('execute')
+            ->with($expected['values'])
+            ->willReturn(true);
+
+        $pdo = $this->createPartialMock(PDO::class, ['prepare']);
+        $pdo->expects($this->once())
+            ->method('prepare')
+            ->with($expected['sqlWithNamedParameters'])
+            ->willReturn($statement);
+
+        $adapter = $this->getMockBuilder(SnowflakeAdapter::class)
+            ->setConstructorArgs([[], $input, $output])
+            ->onlyMethods(['getConnection', 'isDryRunEnabled'])
+            ->getMock();
+        $adapter->expects($this->once())
+            ->method('getConnection')
+            ->willReturn($pdo);
+        $adapter->expects($this->atLeastOnce())
+            ->method('isDryRunEnabled')
+            ->willReturn(false);
+
+        $table = new Table('table');
+
+        $adapter->bulkinsert($table, $rows);
+    }
+
+    /**
+     * @dataProvider bulkInsertDataProvider
+     * @throws Exception
+     */
+    public function testBulkInsertWithDryRunEnabled(array $rows, array $expected)
+    {
+        $input = $this->createStub(InputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
+        $output->expects($this->once())
+            ->method('writeln')
+            ->with($expected['sql']);
+
+        $pdo = $this->getMockBuilder(PDO::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $adapter = $this->getMockBuilder(SnowflakeAdapter::class)
+            ->setConstructorArgs([[], $input, $output])
+            ->onlyMethods(['isDryRunEnabled', 'getConnection'])
+            ->getMock();
+        $adapter->expects($this->atLeastOnce())
+            ->method('isDryRunEnabled')
+            ->willReturn(true);
+        /*
+                $adapter->expects($this->atLeastOnce())
+                    ->method('getConnection')
+                    ->willReturn($pdo);
+        */
+        $table = new Table('table');
+
+        $adapter->bulkinsert($table, $rows);
+    }
+
+    public static function bulkInsertDataProvider(): array
+    {
+        return [
+            'simple fields and values' => [
+                'rows' => [
+                    ['column1' => 'value1 row0', 'column2' => 'value2 row0', 'column3' => 'value3 row0'],
+                    ['column1' => 'value1 row1', 'column2' => 'value2 row1', 'column3' => 'value3 row1'],
+                    ['column1' => 'value1 row2', 'column2' => 'value2 row2', 'column3' => 'value3 row2'],
+                    ['column1' => 'value1 row3', 'column2' => 'value2 row3', 'column3' => 'value3 row3'],
+                    ['column1' => 'value1 row4', 'column2' => 'value2 row4', 'column3' => 'value3 row4'],
+                ],
+                'expected' => [
+                    'sqlWithNamedParameters' => 'insert into "table" ("column1","column2","column3") values ' .
+                        '(:0column1,:0column2,:0column3),' .
+                        '(:1column1,:1column2,:1column3),' .
+                        '(:2column1,:2column2,:2column3),' .
+                        '(:3column1,:3column2,:3column3),' .
+                        '(:4column1,:4column2,:4column3)',
+                    'sql' => 'insert into "table" ("column1","column2","column3") values ' .
+                        "('value1 row0','value2 row0','value3 row0')," .
+                        "('value1 row1','value2 row1','value3 row1')," .
+                        "('value1 row2','value2 row2','value3 row2')," .
+                        "('value1 row3','value2 row3','value3 row3')," .
+                        "('value1 row4','value2 row4','value3 row4')",
+                    'values' => [
+                        'value1 row0', 'value2 row0', 'value3 row0',
+                        'value1 row1', 'value2 row1', 'value3 row1',
+                        'value1 row2', 'value2 row2', 'value3 row2',
+                        'value1 row3', 'value2 row3', 'value3 row3',
+                        'value1 row4', 'value2 row4', 'value3 row4',
+                    ]
+                ],
+            ]
+        ];
     }
 
 }

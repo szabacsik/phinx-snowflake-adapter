@@ -767,4 +767,51 @@ class SnowflakeAdapter extends PdoAdapter
         return $this->fetchAll(sprintf('show primary keys in %s', $this->quoteTableName($tableName)));
     }
 
+    public function bulkinsert(Table $table, array $rows): void
+    {
+        $current = current($rows);
+        $keys = array_keys($current);
+        $countRows = count($rows);
+        $columnNames = implode(',', array_map([$this, 'quoteColumnName'], $keys));
+        $namedParameters = [];
+        $values = [];
+        for ($i = 0; $i < $countRows; $i++) {
+            $namedParameter = [];
+            foreach ($keys as $key) {
+                $namedParameter[] = ":$i$key";
+                if ($this->isDryRunEnabled()) {
+                    $values[":$i$key"] = $rows[$i][$key];
+                }
+            }
+            $namedParameters[] = '(' . implode(',', $namedParameter) . ')';
+        }
+        $namedParameters = implode(',', $namedParameters);
+        $sql = sprintf(
+            'insert into %s (%s) values %%s',
+            $this->quoteTableName($table->getName()),
+            $columnNames
+        );
+        if ($this->isDryRunEnabled()) {
+            foreach ($values as $key => $value) {
+                $namedParameters = str_replace($key, "'$value'", $namedParameters);
+            }
+            $sql = sprintf($sql, $namedParameters);
+            $this->output->writeln($sql);
+        } else {
+            $sql = sprintf($sql, $namedParameters);
+            $stmt = $this->getConnection()->prepare($sql);
+            $vals = [];
+            foreach ($rows as $row) {
+                foreach ($row as $v) {
+                    if (is_bool($v)) {
+                        $vals[] = $this->castToBool($v);
+                    } else {
+                        $vals[] = $v;
+                    }
+                }
+            }
+            $stmt->execute($vals);
+        }
+    }
+
 }
