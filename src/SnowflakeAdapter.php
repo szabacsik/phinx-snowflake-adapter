@@ -771,47 +771,36 @@ class SnowflakeAdapter extends PdoAdapter
     {
         $current = current($rows);
         $keys = array_keys($current);
-        $countRows = count($rows);
         $columnNames = implode(',', array_map([$this, 'quoteColumnName'], $keys));
-        $namedParameters = [];
-        $values = [];
-        for ($i = 0; $i < $countRows; $i++) {
-            $namedParameter = [];
-            foreach ($keys as $key) {
-                $namedParameter[] = ":$i$key";
-                if ($this->isDryRunEnabled()) {
-                    $values[":$i$key"] = $rows[$i][$key];
-                }
-            }
-            $namedParameters[] = '(' . implode(',', $namedParameter) . ')';
-        }
-        $namedParameters = implode(',', $namedParameters);
         $sql = sprintf(
             'insert into %s (%s) values %%s',
             $this->quoteTableName($table->getName()),
             $columnNames
         );
+        $items = [];
+        foreach ($rows as $row) {
+            $items[] = '(' . implode(',', array_map([$this, 'quoteValue'], $row)) . ')';
+        }
+        $values = implode(',', $items);
+        $sql = sprintf($sql, $values);
         if ($this->isDryRunEnabled()) {
-            foreach ($values as $key => $value) {
-                $namedParameters = str_replace($key, "'$value'", $namedParameters);
-            }
-            $sql = sprintf($sql, $namedParameters);
             $this->output->writeln($sql);
         } else {
-            $sql = sprintf($sql, $namedParameters);
-            $stmt = $this->getConnection()->prepare($sql);
-            $vals = [];
-            foreach ($rows as $rowIndex => $row) {
-                foreach ($row as $columnName => $v) {
-                    $namedParameter = ":$rowIndex$columnName";
-                    if (is_bool($v)) {
-                        $vals[$namedParameter] = $this->castToBool($v);
-                    } else {
-                        $vals[$namedParameter] = $v;
-                    }
+            $pdo = $this->getConnection();
+            $pdo->exec($sql);
+        }
+    }
+
+    public function quoteValue($value)
+    {
+        switch (gettype($value)) {
+            case 'integer':
+                return $value;
+            default:
+                if (is_bool($value)) {
+                    return $this->castToBool($value);
                 }
-            }
-            $stmt->execute($vals);
+                return sprintf("'%s'", addslashes($value));
         }
     }
 

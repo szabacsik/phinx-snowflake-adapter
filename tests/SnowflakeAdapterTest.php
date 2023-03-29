@@ -1747,18 +1747,11 @@ class SnowflakeAdapterTest extends TestCase
         $input = $this->createStub(Input::class);
         $output = $this->createStub(Output::class);
 
-        $statement = $this->createPartialMock(PDOStatement::class, ['execute']);
-        $statement
-            ->expects($this->once())
-            ->method('execute')
-            ->with($expected['values'])
-            ->willReturn(true);
-
-        $pdo = $this->createPartialMock(PDO::class, ['prepare']);
+        $pdo = $this->createPartialMock(PDO::class, ['exec']);
         $pdo->expects($this->once())
-            ->method('prepare')
-            ->with($expected['sqlWithNamedParameters'])
-            ->willReturn($statement);
+            ->method('exec')
+            ->with($expected['sql'])
+            ->willReturn(count($rows));
 
         $adapter = $this->getMockBuilder(SnowflakeAdapter::class)
             ->setConstructorArgs([[], $input, $output])
@@ -1767,7 +1760,7 @@ class SnowflakeAdapterTest extends TestCase
         $adapter->expects($this->once())
             ->method('getConnection')
             ->willReturn($pdo);
-        $adapter->expects($this->atLeastOnce())
+        $adapter->expects($this->once())
             ->method('isDryRunEnabled')
             ->willReturn(false);
 
@@ -1788,10 +1781,6 @@ class SnowflakeAdapterTest extends TestCase
             ->method('writeln')
             ->with($expected['sql']);
 
-        $pdo = $this->getMockBuilder(PDO::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
         $adapter = $this->getMockBuilder(SnowflakeAdapter::class)
             ->setConstructorArgs([[], $input, $output])
             ->onlyMethods(['isDryRunEnabled', 'getConnection'])
@@ -1799,11 +1788,7 @@ class SnowflakeAdapterTest extends TestCase
         $adapter->expects($this->atLeastOnce())
             ->method('isDryRunEnabled')
             ->willReturn(true);
-        /*
-                $adapter->expects($this->atLeastOnce())
-                    ->method('getConnection')
-                    ->willReturn($pdo);
-        */
+
         $table = new Table('table');
 
         $adapter->bulkinsert($table, $rows);
@@ -1814,27 +1799,33 @@ class SnowflakeAdapterTest extends TestCase
         return [
             'simple fields and values' => [
                 'rows' => [
-                    ['column1' => 'value1 row0', 'column2' => 'value2 row0', 'column3' => 'value3 row0'],
+                    ['column1' => "'value1 row0", 'column2' => 'value2 row0', 'column3' => 'value3 row0'],
                     ['column1' => 'value1 row1', 'column2' => 'value2 row1', 'column3' => 'value3 row1'],
                     ['column1' => 'value1 row2', 'column2' => 'value2 row2', 'column3' => 'value3 row2'],
                     ['column1' => 'value1 row3', 'column2' => 'value2 row3', 'column3' => 'value3 row3'],
                     ['column1' => 'value1 row4', 'column2' => 'value2 row4', 'column3' => 'value3 row4'],
                 ],
                 'expected' => [
-                    'sqlWithNamedParameters' => 'insert into "table" ("column1","column2","column3") values ' .
+                    'preparedStatementWithNamedParameters' => 'insert into "table" ("column1","column2","column3") values ' .
                         '(:0column1,:0column2,:0column3),' .
                         '(:1column1,:1column2,:1column3),' .
                         '(:2column1,:2column2,:2column3),' .
                         '(:3column1,:3column2,:3column3),' .
                         '(:4column1,:4column2,:4column3)',
+                    'preparedStatementWithQuestionMarkParameters' => 'insert into "table" ("column1","column2","column3") values ' .
+                        '(?,?,?),' .
+                        '(?,?,?),' .
+                        '(?,?,?),' .
+                        '(?,?,?),' .
+                        '(?,?,?)',
                     'sql' => 'insert into "table" ("column1","column2","column3") values ' .
-                        "('value1 row0','value2 row0','value3 row0')," .
+                        "('\'value1 row0','value2 row0','value3 row0')," .
                         "('value1 row1','value2 row1','value3 row1')," .
                         "('value1 row2','value2 row2','value3 row2')," .
                         "('value1 row3','value2 row3','value3 row3')," .
                         "('value1 row4','value2 row4','value3 row4')",
                     'values' => [
-                        ':0column1' => 'value1 row0', ':0column2' => 'value2 row0', ':0column3' => 'value3 row0',
+                        ':0column1' => "'value1 row0", ':0column2' => 'value2 row0', ':0column3' => 'value3 row0',
                         ':1column1' => 'value1 row1', ':1column2' => 'value2 row1', ':1column3' => 'value3 row1',
                         ':2column1' => 'value1 row2', ':2column2' => 'value2 row2', ':2column3' => 'value3 row2',
                         ':3column1' => 'value1 row3', ':3column2' => 'value2 row3', ':3column3' => 'value3 row3',
@@ -1843,6 +1834,14 @@ class SnowflakeAdapterTest extends TestCase
                 ],
             ]
         ];
+    }
+
+    public function testQuoteValue()
+    {
+        $adapter = new SnowflakeAdapter([]);
+        $this->assertIsInt($adapter->quoteValue(1));
+        $this->assertIsString($adapter->quoteValue('1'));
+        $this->assertEquals(1, $adapter->quoteValue(true));
     }
 
 }
