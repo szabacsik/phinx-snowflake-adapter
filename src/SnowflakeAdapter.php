@@ -11,6 +11,7 @@ use Phinx\Db\Table\Index;
 use Phinx\Db\Table\Table;
 use Phinx\Db\Util\AlterInstructions;
 use Phinx\Config\Config;
+use Phinx\Util\Literal;
 use RuntimeException;
 use PDOException;
 use InvalidArgumentException;
@@ -795,11 +796,16 @@ class SnowflakeAdapter extends PdoAdapter
     {
         switch (gettype($value)) {
             case 'integer':
+            case 'double':
                 return $value;
+            case 'boolean':
+                return ($value ? 'true' : 'false');
+            case 'NULL':
+                return 'null';
+            case 'object':
+                return (string)$value;
+                break;
             default:
-                if (is_bool($value)) {
-                    return $this->castToBool($value);
-                }
                 return sprintf("'%s'", addslashes($value));
         }
     }

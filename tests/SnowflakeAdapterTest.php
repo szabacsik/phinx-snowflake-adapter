@@ -5,6 +5,7 @@ namespace Szabacsik\Phinx\Tests;
 use Phinx\Db\Table\Column;
 use Phinx\Db\Table\ForeignKey;
 use Phinx\Db\Table\Table;
+use Phinx\Util\Literal;
 use PHPUnit\Framework\TestCase;
 use Szabacsik\Phinx\SnowflakeAdapter;
 use Phinx\Config\Config;
@@ -1836,12 +1837,57 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
-    public function testQuoteValue()
+    /**
+     * @dataProvider quoteValueDataProvider
+     */
+    public function testQuoteValue($value, $expected)
     {
         $adapter = new SnowflakeAdapter([]);
-        $this->assertIsInt($adapter->quoteValue(1));
-        $this->assertIsString($adapter->quoteValue('1'));
-        $this->assertEquals(1, $adapter->quoteValue(true));
+        if ($expected != 'exception') {
+            $this->assertEquals($expected, $adapter->quoteValue($value));
+            $this->assertEquals(gettype($expected), getType($adapter->quoteValue($value)));
+        } else {
+            $this->expectException(\Throwable::class);
+            $adapter->quoteValue($value);
+        }
+    }
+
+    public static function quoteValueDataProvider(): array
+    {
+        return [
+            'integer' => [
+                'value' => 42,
+                'expected' => 42,
+            ],
+            'float' => [
+                'value' => 42.42,
+                'expected' => 42.42,
+            ],
+            'string' => [
+                'value' => 'lorem ipsum',
+                'expected' => "'lorem ipsum'",
+            ],
+            'null' => [
+                'value' => null,
+                'expected' => 'null',
+            ],
+            'boolean true' => [
+                'value' => true,
+                'expected' => 'true',
+            ],
+            'boolean false' => [
+                'value' => false,
+                'expected' => 'false',
+            ],
+            'literal' => [
+                'value' => new Literal('lorem ipsum'),
+                'expected' => 'lorem ipsum',
+            ],
+            'non stringable object' => [
+                'value' => new \stdClass(),
+                'expected' => 'exception',
+            ],
+        ];
     }
 
 }
