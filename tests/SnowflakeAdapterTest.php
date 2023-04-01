@@ -1890,4 +1890,76 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider getDataTypeBySynonymDataProvider
+     */
+    public function testGetDataTypeBySynonym(string $type, string $expected)
+    {
+        $adapter = new SnowflakeAdapter([]);
+        if ('exception' != $expected) {
+            $this->assertEquals($expected, $adapter->getDataTypeBySynonym($type));
+        } else {
+            $this->expectException(InvalidArgumentException::class);
+            $adapter->getDataTypeBySynonym($type);
+        }
+    }
+
+    public static function getDataTypeBySynonymDataProvider(): array
+    {
+        $types = [
+            'number' => [
+                'number', 'decimal', 'numeric', 'int', 'integer', 'bigint', 'smallint', 'tinyint', 'byteint',
+            ],
+            'float' => [
+                'float', 'float4', 'float8', 'double', 'double precision', 'real',
+            ],
+            'varchar' => [
+                'varchar', 'char', 'character', 'nchar', 'string', 'text', 'nvarchar', 'nvarchar2', 'char varying', 'nchar varying',
+            ],
+            'boolean' => [
+                'boolean',
+            ],
+            'date' => [
+                'date',
+            ],
+            'time' => [
+                'time',
+            ],
+            'timestamp_ntz' => [
+                'timestamp_ntz', 'datetime', 'timestampntz', 'timestamp without time zone',
+            ],
+            'timestamp_ltz' => [
+                'timestamp_ltz', 'timestampltz', 'timestamp with local time zone',
+            ],
+            'timestamp_tz' => [
+                'timestamp_tz', 'timestamptz', 'timestamp with time zone',
+            ],
+            'variant' => [
+                'variant',
+            ],
+            'array' => [
+                'array',
+            ],
+            'object' => [
+                'object',
+            ],
+            'geography' => [
+                'geography',
+            ],
+            'geometry' => [
+                'geometry',
+            ],
+            'exception' => [
+                'unknown data type'
+            ],
+        ];
+        $data = [];
+        foreach ($types as $realType => $synonymous) {
+            foreach ($synonymous as $synonym) {
+                $data["$synonym=$realType"] = [$synonym, $realType];
+            }
+        }
+        return $data;
+    }
+
 }

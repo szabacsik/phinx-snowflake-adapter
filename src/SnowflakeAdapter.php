@@ -628,6 +628,79 @@ class SnowflakeAdapter extends PdoAdapter
         return $def;
     }
 
+    /**
+     * https://docs.snowflake.com/en/sql-reference/data-types
+     * https://docs.snowflake.com/en/sql-reference/intro-summary-data-types
+     * @param string $type
+     * @return string
+     */
+    public function getDataTypeBySynonym(string $type): string
+    {
+        $types = [
+            // - number -
+            'number' => 'number',
+            'decimal' => 'number',
+            'numeric' => 'number',
+            'int' => 'number',
+            'integer' => 'number',
+            'bigint' => 'number',
+            'smallint' => 'number',
+            'tinyint' => 'number',
+            'byteint' => 'number',
+            // - float -
+            'float' => 'float',
+            'float4' => 'float',
+            'float8' => 'float',
+            'double' => 'float',
+            'double precision' => 'float',
+            'real' => 'float',
+            // - varchar -
+            'varchar' => 'varchar',
+            'char' => 'varchar',
+            'character' => 'varchar',
+            'nchar' => 'varchar',
+            'string' => 'varchar',
+            'text' => 'varchar',
+            'nvarchar' => 'varchar',
+            'nvarchar2' => 'varchar',
+            'char varying' => 'varchar',
+            'nchar varying' => 'varchar',
+            // - boolean -
+            'boolean' => 'boolean',
+            // - date -
+            'date' => 'date',
+            // - time -
+            'time' => 'time',
+            // - timestamp_ntz -
+            'timestamp_ntz' => 'timestamp_ntz',
+            'datetime' => 'timestamp_ntz',
+            'timestampntz' => 'timestamp_ntz',
+            'timestamp without time zone' => 'timestamp_ntz',
+            // - timestamp_ltz -
+            'timestamp_ltz' => 'timestamp_ltz',
+            'timestampltz' => 'timestamp_ltz',
+            'timestamp with local time zone' => 'timestamp_ltz',
+            // - timestamp_tz -
+            'timestamp_tz' => 'timestamp_tz',
+            'timestamptz' => 'timestamp_tz',
+            'timestamp with time zone' => 'timestamp_tz',
+            // - variant -
+            'variant' => 'variant',
+            // - array -
+            'array' => 'array',
+            // - object -
+            'object' => 'object',
+            // - geography -
+            'geography' => 'geography',
+            // - geometry -
+            'geometry' => 'geometry',
+        ];
+        if ($types[$type]) {
+            return $types[$type];
+        }
+        throw new InvalidArgumentException(sprintf('Unknown data type: `%s`', $type));
+    }
+
     public function getVersionLog(): array
     {
         if (!isset($this->options['version_order'])) {
