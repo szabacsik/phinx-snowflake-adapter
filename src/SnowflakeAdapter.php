@@ -298,13 +298,15 @@ class SnowflakeAdapter extends PdoAdapter
             throw new InvalidArgumentException("The specified column doesn't exist: $columnName");
         }
 
+        $typeOfNewColumn = $this->getDataTypeBySynonym($newColumn->getType());
+
         $instruction = new AlterInstructions();
 
-        if ($currentColumn->getType() != $newColumn->getType()) {
+        if ($currentColumn->getType() != $typeOfNewColumn) {
             $instruction->addAlter(sprintf(
                 'alter column %s set data type %s',
                 $this->quoteColumnName($currentColumn->getName()),
-                $newColumn->getType()
+                $typeOfNewColumn
             ));
         }
 
@@ -350,7 +352,7 @@ class SnowflakeAdapter extends PdoAdapter
             $instruction->addAlter($sql);
         }
 
-        if ('varchar' === $currentColumn->getType() && $currentColumn->getType() === $newColumn->getType()) {
+        if ('varchar' === $currentColumn->getType() && $currentColumn->getType() === $typeOfNewColumn) {
             if ($currentColumn->getLimit() != $newColumn->getLimit()) {
                 $sql = sprintf(
                     'alter column %s set data type %s(%s) %s',
@@ -363,7 +365,7 @@ class SnowflakeAdapter extends PdoAdapter
             }
         }
 
-        if ('number' === $currentColumn->getType() && $currentColumn->getType() === $newColumn->getType()) {
+        if ('number' === $currentColumn->getType() && $currentColumn->getType() === $typeOfNewColumn) {
             if ($currentColumn->getPrecision() != $newColumn->getPrecision()) {
                 $instruction->addAlter(sprintf(
                     'alter %s set data type number(%s,%s)',

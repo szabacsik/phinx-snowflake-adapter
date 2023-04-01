@@ -1621,6 +1621,14 @@ class SnowflakeAdapterTest extends TestCase
             'instructions' => $instructions,
         ];
 
+        $newColumn = clone $newColumn;
+        $newColumn->setType('string');
+        $tests['Increase the length of a varchar column defined by string synonym'] = [
+            'newColumn' => $newColumn,
+            'columns' => [$currentColumn],
+            'instructions' => $instructions,
+        ];
+
         //Increase the length of a text/string column with collation
         $currentColumn = new Column();
         $currentColumn->setName($columnName);
@@ -1680,9 +1688,11 @@ class SnowflakeAdapterTest extends TestCase
 
         //Unset the comment for a column
         $currentColumn = new Column();
+        $currentColumn->setType('varchar');
         $currentColumn->setName($columnName);
         $currentColumn->setComment('Lorem Ipsum');
         $newColumn = new Column();
+        $newColumn->setType('varchar');
         $newColumn->setName($columnName);
         $newColumn->setComment(null);
         $instructions = new AlterInstructions([
@@ -1696,9 +1706,11 @@ class SnowflakeAdapterTest extends TestCase
 
         //Set the comment for a column
         $currentColumn = new Column();
+        $currentColumn->setType('varchar');
         $currentColumn->setName($columnName);
         $currentColumn->setComment('Lorem Ipsum');
         $newColumn = new Column();
+        $newColumn->setType('varchar');
         $newColumn->setName($columnName);
         $newColumn->setComment('Ipsum Lorem');
         $instructions = new AlterInstructions([
@@ -1735,6 +1747,11 @@ class SnowflakeAdapterTest extends TestCase
 
         //TODO: Set or unset a tag on a column
 
+/*        foreach ($tests as $name => $test) {
+            if ($name != 'Increase the length of a varchar column defined by string synonym') {
+                unset($tests[$name]);
+            }
+        }*/
         return $tests;
 
     }
