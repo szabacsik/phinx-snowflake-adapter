@@ -1979,4 +1979,31 @@ class SnowflakeAdapterTest extends TestCase
         return $data;
     }
 
+    /**
+     * @dataProvider getForeignKeysDataProvider
+     * @throws Exception
+     */
+    public function testGetForeignKeys(string $tableName, string $expectedSql)
+    {
+        $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
+        $adapter->expects($this->once())
+            ->method('fetchAll')
+            ->with($expectedSql);
+        $adapter->getForeignKeys($tableName);
+    }
+
+    public static function getForeignKeysDataProvider(): array
+    {
+        return [
+            'table name is specified' => [
+                'tableName' => 'table',
+                'expectedSql' => 'show imported keys in table "table"',
+            ],
+            'table name is not specified' => [
+                'tableName' => '',
+                'expectedSql' => 'show imported keys',
+            ],
+        ];
+    }
+
 }

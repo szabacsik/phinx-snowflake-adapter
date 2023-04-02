@@ -885,4 +885,11 @@ class SnowflakeAdapter extends PdoAdapter
         }
     }
 
+    public function getForeignKeys(string $tableName): array
+    {
+        $tableName ? $t = sprintf(' in table %s', $this->quoteTableName($tableName)) : $t = '';
+        $sql = sprintf('show imported keys%s', $t);
+        return $this->fetchAll($sql);
+    }
+
 }
