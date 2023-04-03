@@ -19,6 +19,8 @@ use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
+use ReflectionException;
+use Phinx\Db\Table\Index;
 
 class SnowflakeAdapterTest extends TestCase
 {
@@ -2003,6 +2005,76 @@ class SnowflakeAdapterTest extends TestCase
                 'tableName' => '',
                 'expectedSql' => 'show imported keys',
             ],
+        ];
+    }
+
+    /**
+     * @dataProvider getAddIndexInstructionsDataProvider
+     * @throws ReflectionException
+     */
+    public function testGetAddIndexInstructions(Table $table, Index $index, string $expected)
+    {
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getAddIndexInstructions');
+        if ('exception' != $expected) {
+            $addIndexInstructions = $method->invoke($adapter, $table, $index);
+            $this->assertInstanceOf(AlterInstructions::class, $addIndexInstructions);
+            $this->assertCount(0, $addIndexInstructions->getPostSteps());
+            $this->assertEquals($expected, $addIndexInstructions->getAlterParts()[0]);
+        } else {
+            $this->expectException(\Throwable::class);
+            $method->invoke($adapter, $table, $index);
+        }
+    }
+
+    public static function getAddIndexInstructionsDataProvider(): array
+    {
+        $table = new Table('table');
+
+        $uniqueIndexOneColumn = new Index();
+        $uniqueIndexOneColumn->setType('unique');
+        $uniqueIndexOneColumn->setColumns('column');
+
+        $uniqueIndexTwoColumn = new Index();
+        $uniqueIndexTwoColumn->setType('unique');
+        $uniqueIndexTwoColumn->setColumns(['column1', 'column2']);
+
+        $uniqueIndexOneColumnNamed = clone $uniqueIndexOneColumn;
+        $uniqueIndexOneColumnNamed->setName('name');
+
+        $uniqueIndexTwoColumnNamed = clone $uniqueIndexTwoColumn;
+        $uniqueIndexTwoColumnNamed->setName('name');
+
+        $notUniqueIndex = new Index();
+        $notUniqueIndex->setType('fulltext');
+
+        return [
+            'Unique index type, one column' => [
+                'table' => $table,
+                'index' => $uniqueIndexOneColumn,
+                'expected' => 'alter table "table" add constraint unique ("column")',
+            ],
+            'Unique index type, two column' => [
+                'table' => $table,
+                'index' => $uniqueIndexTwoColumn,
+                'expected' => 'alter table "table" add constraint unique ("column1","column2")',
+            ],
+            'Unique index type, one column, named' => [
+                'table' => $table,
+                'index' => $uniqueIndexOneColumnNamed,
+                'expected' => 'alter table "table" add constraint "name" unique ("column")',
+            ],
+            'Unique index type, two column, named' => [
+                'table' => $table,
+                'index' => $uniqueIndexTwoColumnNamed,
+                'expected' => 'alter table "table" add constraint "name" unique ("column1","column2")',
+            ],
+            'Index type is not unique' => [
+                'table' => $table,
+                'index' => $notUniqueIndex,
+                'expected' => 'exception'
+            ]
         ];
     }
 

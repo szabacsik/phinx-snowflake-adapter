@@ -390,7 +390,17 @@ class SnowflakeAdapter extends PdoAdapter
 
     protected function getAddIndexInstructions(Table $table, Index $index): AlterInstructions
     {
-        // TODO: Implement getAddIndexInstructions() method.
+        if($index->getType() != 'unique') {
+            throw new InvalidArgumentException(sprintf('Invalid index type: `%s`', $index->getType()));
+        }
+        $index->getName() ? $name = sprintf(' "%s"', $index->getName()) : $name = '';
+        $sql = sprintf(
+            'alter table %s add constraint%s unique (%s)',
+            $this->quoteTableName($table->getName()),
+            $name,
+            implode(',', array_map([$this, 'quoteColumnName'], $index->getColumns()))
+        );
+        return new AlterInstructions([$sql]);
     }
 
     protected function getDropIndexByColumnsInstructions(string $tableName, $columns): AlterInstructions
