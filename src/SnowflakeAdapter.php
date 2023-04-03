@@ -112,13 +112,22 @@ class SnowflakeAdapter extends PdoAdapter
                 ) . '")';
         }
 
-        if (isset($table->getOptions()['unique'])) {
-            $sql .= 'unique ("';
-            $sql .= (
-                is_array($table->getOptions()['unique'])
-                    ? implode('", "', $table->getOptions()['unique'])
-                    : $table->getOptions()['unique']
-                ) . '")';
+        $constraints = [];
+        foreach ($indexes as $index) {
+            $constraintType = mb_strtolower($index->getType());
+            if (in_array($constraintType, ['primary_key', 'primary-key', 'primarykey', 'primary'])) {
+                $constraintType = 'primary key';
+            }
+            $constraintColumn = implode($separator, array_map([$this, 'quoteColumnName'], $index->getColumns()));
+            $constraint = "$constraintType ($constraintColumn)";
+            if ($index->getName()) {
+                $constraint = sprintf('constraint "%s" %s', $index->getName(), $constraint);
+            }
+            $constraints[] = $constraint;
+        }
+        $constraints = implode($separator, $constraints);
+        if ($constraints) {
+            $sql .= $constraints;
         }
 
         $sql = rtrim($sql, $separator);

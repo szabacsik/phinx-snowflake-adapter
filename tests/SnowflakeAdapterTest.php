@@ -278,6 +278,7 @@ class SnowflakeAdapterTest extends TestCase
 
     /**
      * @dataProvider createTableDataProvider
+     * @throws Exception
      */
     public function testCreateTable(Table $table, array $columns, array $indexes, string $expected)
     {
@@ -288,6 +289,26 @@ class SnowflakeAdapterTest extends TestCase
 
     public static function createTableDataProvider(): array
     {
+        $indexes[0] = new Index();
+        $indexes[0]->setColumns(['column1', 'column2']);
+        $indexes[0]->setType('unique');
+        $indexes[0]->setName('');
+        $indexes[1] = new Index();
+        $indexes[1]->setColumns('column1');
+        $indexes[1]->setType('unique');
+        $indexes[1]->setName('unique_constraint_column1');
+        $indexes[2] = new Index();
+        $indexes[2]->setColumns('column2');
+        $indexes[2]->setType('unique');
+        $indexes[2]->setName('');
+        $indexes[3] = new Index();
+        $indexes[3]->setColumns(['column1', 'column2']);
+        $indexes[3]->setType('unique');
+        $indexes[3]->setName('unique_constraint_column1_and_column2');
+        $indexes[4] = new Index();
+        $indexes[4]->setColumns(['column2', 'column3']);
+        $indexes[4]->setType('pRiMaRy-kEy');
+        $indexes[4]->setName('primary key constraint');
         $tables = [
             'table with id column explicitly set' => [
                 'name' => 'my_awesome_table',
@@ -364,8 +385,8 @@ class SnowflakeAdapterTest extends TestCase
             ],
             'Add unique constraint' => [
                 'name' => 'table',
-                'options' => ['id' => false, 'unique' => ['column1', 'column2']],
-                'indexes' => [],
+                'options' => ['id' => false],
+                'indexes' => [$indexes[0]],
                 'columns' => [
                     ['name' => 'column1', 'type' => 'integer'],
                     ['name' => 'column2', 'type' => 'integer'],
@@ -373,6 +394,26 @@ class SnowflakeAdapterTest extends TestCase
                 ],
                 'expected' =>
                     'create table "table" ("column1" number null, "column2" number null, "created" timestamp_ntz null, unique ("column1", "column2"))',
+            ],
+            'Some indexes' => [
+                'name' => 'table',
+                'options' => ['unique' => ['column1', 'column2']],
+                'indexes' => $indexes,
+                'columns' => [
+                    ['name' => 'column1', 'type' => 'number'],
+                    ['name' => 'column2', 'type' => 'number'],
+                    ['name' => 'column3', 'type' => 'number'],
+                ],
+                'expected' =>
+                    'create table "table" (' .
+                    '"id" number identity not null primary key, ' .
+                    '"column1" number null, "column2" number null, "column3" number null, ' .
+                    'unique ("column1", "column2"), ' .
+                    'constraint "unique_constraint_column1" unique ("column1"), ' .
+                    'unique ("column2"), ' .
+                    'constraint "unique_constraint_column1_and_column2" unique ("column1", "column2"), ' .
+                    'constraint "primary key constraint" primary key ("column2", "column3")' .
+                    ')',
             ],
         ];
         $data = [];
