@@ -612,7 +612,7 @@ class SnowflakeAdapter extends PdoAdapter
             }
         }
 
-        $column->isNull() ? $def .= ' null' : $def .= ' not null';
+        $def .= ($column->isNull() === true) ? ' null' : ' not null';
 
         if (!is_null($column->getDefault())) {
             if ('null' != $column->getDefault()) {
