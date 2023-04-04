@@ -254,11 +254,23 @@ class SnowflakeAdapterTest extends TestCase
                 'comment' => 'Lorem Ipsum',
                 'expected' => "number null comment 'Lorem Ipsum'"
             ],
-            'number with properties' => [
+            'number with primary key property' => [
                 'name' => 'field',
                 'type' => 'number',
                 'properties' => ['primary key'],
-                'expected' => "number null primary key"
+                'expected' => "number null"
+            ],
+            'number with primary_key property' => [
+                'name' => 'field',
+                'type' => 'number',
+                'properties' => ['primary_key'],
+                'expected' => "number null"
+            ],
+            'number with properties' => [
+                'name' => 'field',
+                'type' => 'number',
+                'properties' => ['lorem', 'ipsum'],
+                'expected' => "number null lorem ipsum"
             ],
         ];
         $columns = [];
@@ -312,7 +324,7 @@ class SnowflakeAdapterTest extends TestCase
         $tables = [
             'table with id column explicitly set' => [
                 'name' => 'my_awesome_table',
-                'options' => ['primary_key' => ['lorem', 'ipsum']],
+                'options' => ['primary-key' => ['lorem', 'ipsum']],
                 'indexes' => [],
                 'columns' => [
                     ['type' => 'number', 'name' => 'id', 'null' => false, 'identity' => true, 'properties' => ['primary key']],
@@ -320,7 +332,7 @@ class SnowflakeAdapterTest extends TestCase
                     ['type' => 'datetime', 'name' => 'datetime', 'null' => false, 'identity' => false],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("id" number identity not null primary key, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("lorem", "ipsum"))',
+                    'create table "my_awesome_table" ("id" number identity not null, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("lorem", "ipsum"), primary key ("id"))',
             ],
             'phinxlog' => [
                 'name' => 'phinxlog',
@@ -346,7 +358,7 @@ class SnowflakeAdapterTest extends TestCase
                     ['type' => 'datetime', 'name' => 'datetime', 'null' => false],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("id" number identity not null primary key, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null)',
+                    'create table "my_awesome_table" ("id" number identity not null, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("id"))',
             ],
             'table with id column name set in options' => [
                 'name' => 'my_awesome_table',
@@ -358,7 +370,7 @@ class SnowflakeAdapterTest extends TestCase
                     ['type' => 'datetime', 'name' => 'datetime', 'null' => false],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("MyUniqueId" number identity not null primary key, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null)',
+                    'create table "my_awesome_table" ("MyUniqueId" number identity not null, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("MyUniqueId"))',
             ],
             'table using UUID for the primary id column' => [
                 'name' => 'my_awesome_table',
@@ -369,7 +381,7 @@ class SnowflakeAdapterTest extends TestCase
                     ['type' => 'number', 'name' => 'other'],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("id" varchar(36) not null default uuid_string() primary key, "other" number null)',
+                    'create table "my_awesome_table" ("id" varchar(36) not null default uuid_string(), "other" number null, primary key ("id"))',
             ],
             'Let’s disable the automatic id column and create a primary key using two columns' => [
                 'name' => 'followers',
@@ -406,8 +418,9 @@ class SnowflakeAdapterTest extends TestCase
                 ],
                 'expected' =>
                     'create table "table" (' .
-                    '"id" number identity not null primary key, ' .
+                    '"id" number identity not null, ' .
                     '"column1" number null, "column2" number null, "column3" number null, ' .
+                    'primary key ("id"), ' .
                     'unique ("column1", "column2"), ' .
                     'constraint "unique_constraint_column1" unique ("column1"), ' .
                     'unique ("column2"), ' .

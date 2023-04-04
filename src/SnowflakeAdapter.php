@@ -99,23 +99,34 @@ class SnowflakeAdapter extends PdoAdapter
 
         $separator = ', ';
         $sql = "create table {$this->quoteTableName($table->getName())} (";
+
+        $primaryKeys = [];
+
         foreach ($columns as $column) {
             $sql .= $this->quoteColumnName($column->getName()) . ' ' . $this->getColumnSqlDefinition($column) . $separator;
+            if (array_intersect(['primary key', 'primary-key', 'primary_key', 'primarykey'], $column->getProperties())) {
+                $primaryKeys[] = $column->getName();
+            }
         }
 
-        if (isset($table->getOptions()['primary_key'])) {
-            $sql .= 'primary key ("';
-            $sql .= (
-                is_array($table->getOptions()['primary_key'])
-                    ? implode('", "', $table->getOptions()['primary_key'])
-                    : $table->getOptions()['primary_key']
-                ) . '")';
+        $optionPrimaryKey = $options['primary key'] ?? $options['primary_key'] ?? $options['primary-key'] ?? $options['primarykey'] ?? null;
+        if ($optionPrimaryKey) {
+            $primaryKeys[] = $optionPrimaryKey;
+        }
+
+        if ($primaryKeys) {
+            foreach ($primaryKeys as $primaryKey) {
+                $pk = new Index();
+                $pk->setType('primary key');
+                $pk->setColumns($primaryKey);
+                array_unshift($indexes, $pk);
+            }
         }
 
         $constraints = [];
         foreach ($indexes as $index) {
             $constraintType = mb_strtolower($index->getType());
-            if (in_array($constraintType, ['primary_key', 'primary-key', 'primarykey', 'primary'])) {
+            if (in_array($constraintType, ['primary_key', 'primary-key', 'primarykey', 'primary', 'primary key'])) {
                 $constraintType = 'primary key';
             }
             $constraintColumn = implode($separator, array_map([$this, 'quoteColumnName'], $index->getColumns()));
@@ -638,7 +649,15 @@ class SnowflakeAdapter extends PdoAdapter
             }
         }
 
-        if ($column->getProperties()) {
+        $properties = $column->getProperties();
+        $properties = array_filter(
+            $properties,
+            fn ($property) => !in_array(
+                mb_strtolower($property),
+                ['primary key', 'primary-key', 'primary_key', 'primarykey']
+            )
+        );
+        if ($properties) {
             $def .= ' ' . implode(' ', $column->getProperties());
         }
 
