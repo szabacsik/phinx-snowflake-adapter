@@ -927,7 +927,20 @@ class SnowflakeAdapter extends PdoAdapter
     {
         $tableName ? $t = sprintf(' in table %s', $this->quoteTableName($tableName)) : $t = '';
         $sql = sprintf('show imported keys%s', $t);
-        return $this->fetchAll($sql);
+        $rows = $this->fetchAll($sql);
+        $foreignKeys = [];
+        foreach ($rows as $row) {
+            $constraintName = $row['fk_name'];
+            $tableName = "{$row['fk_database_name']}.{$row['fk_schema_name']}.{$row['fk_table_name']}";
+            $columnName = $row['fk_column_name'];
+            $referencedTableName = "{$row['pk_database_name']}.{$row['pk_schema_name']}.{$row['pk_table_name']}";
+            $referencedColumName = $row['pk_column_name'];
+            $foreignKeys[$constraintName]['table'] = $tableName;
+            $foreignKeys[$constraintName]['columns'][] = $columnName;
+            $foreignKeys[$constraintName]['referenced_table'] = $referencedTableName;
+            $foreignKeys[$constraintName]['referenced_columns'][] = $referencedColumName;
+        }
+        return $foreignKeys;
     }
 
 }

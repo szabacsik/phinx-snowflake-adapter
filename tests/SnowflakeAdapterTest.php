@@ -2039,25 +2039,418 @@ class SnowflakeAdapterTest extends TestCase
      * @dataProvider getForeignKeysDataProvider
      * @throws Exception
      */
-    public function testGetForeignKeys(string $tableName, string $expectedSql)
+    public function testGetForeignKeys(string $tableName, string $expectedSql, array $fetchAllWillReturn, array $expectedForeignKeys)
     {
         $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
         $adapter->expects($this->once())
             ->method('fetchAll')
-            ->with($expectedSql);
-        $adapter->getForeignKeys($tableName);
+            ->with($expectedSql)
+            ->willReturn($fetchAllWillReturn);
+        $foreignKeys = $adapter->getForeignKeys($tableName);
+        $this->assertEquals($expectedForeignKeys, $foreignKeys);
     }
 
     public static function getForeignKeysDataProvider(): array
     {
+        $withoutTableNameFetchAllWillReturn = array(
+            0 =>
+                array(
+                    'created_on' => '2023-04-02 04:17:55.536',
+                    0 => '2023-04-02 04:17:55.536',
+                    'pk_database_name' => 'TEST_DATABASE',
+                    1 => 'TEST_DATABASE',
+                    'pk_schema_name' => 'TEST_SCHEMA',
+                    2 => 'TEST_SCHEMA',
+                    'pk_table_name' => 'multiuniqueparent',
+                    3 => 'multiuniqueparent',
+                    'pk_column_name' => 'id1',
+                    4 => 'id1',
+                    'fk_database_name' => 'TEST_DATABASE',
+                    5 => 'TEST_DATABASE',
+                    'fk_schema_name' => 'TEST_SCHEMA',
+                    6 => 'TEST_SCHEMA',
+                    'fk_table_name' => 'multiuniquechild',
+                    7 => 'multiuniquechild',
+                    'fk_column_name' => 'parent_id1',
+                    8 => 'parent_id1',
+                    'key_sequence' => '1',
+                    9 => '1',
+                    'update_rule' => 'NO ACTION',
+                    10 => 'NO ACTION',
+                    'delete_rule' => 'NO ACTION',
+                    11 => 'NO ACTION',
+                    'fk_name' => 'parent_child_foreign_key_constraint',
+                    12 => 'parent_child_foreign_key_constraint',
+                    'pk_name' => 'MULTIUNIQUEPARENT_ID1_AND_ID2',
+                    13 => 'MULTIUNIQUEPARENT_ID1_AND_ID2',
+                    'deferrability' => 'NOT DEFERRABLE',
+                    14 => 'NOT DEFERRABLE',
+                    'rely' => 'false',
+                    15 => 'false',
+                    'comment' => NULL,
+                    16 => NULL,
+                ),
+            1 =>
+                array(
+                    'created_on' => '2023-04-02 04:17:55.536',
+                    0 => '2023-04-02 04:17:55.536',
+                    'pk_database_name' => 'TEST_DATABASE',
+                    1 => 'TEST_DATABASE',
+                    'pk_schema_name' => 'TEST_SCHEMA',
+                    2 => 'TEST_SCHEMA',
+                    'pk_table_name' => 'multiuniqueparent',
+                    3 => 'multiuniqueparent',
+                    'pk_column_name' => 'id2',
+                    4 => 'id2',
+                    'fk_database_name' => 'TEST_DATABASE',
+                    5 => 'TEST_DATABASE',
+                    'fk_schema_name' => 'TEST_SCHEMA',
+                    6 => 'TEST_SCHEMA',
+                    'fk_table_name' => 'multiuniquechild',
+                    7 => 'multiuniquechild',
+                    'fk_column_name' => 'parent_id2',
+                    8 => 'parent_id2',
+                    'key_sequence' => '2',
+                    9 => '2',
+                    'update_rule' => 'NO ACTION',
+                    10 => 'NO ACTION',
+                    'delete_rule' => 'NO ACTION',
+                    11 => 'NO ACTION',
+                    'fk_name' => 'parent_child_foreign_key_constraint',
+                    12 => 'parent_child_foreign_key_constraint',
+                    'pk_name' => 'MULTIUNIQUEPARENT_ID1_AND_ID2',
+                    13 => 'MULTIUNIQUEPARENT_ID1_AND_ID2',
+                    'deferrability' => 'NOT DEFERRABLE',
+                    14 => 'NOT DEFERRABLE',
+                    'rely' => 'false',
+                    15 => 'false',
+                    'comment' => NULL,
+                    16 => NULL,
+                ),
+            2 =>
+                array(
+                    'created_on' => '2023-04-04 02:46:47.851',
+                    0 => '2023-04-04 02:46:47.851',
+                    'pk_database_name' => 'TEST_DATABASE',
+                    1 => 'TEST_DATABASE',
+                    'pk_schema_name' => 'TEST_SCHEMA',
+                    2 => 'TEST_SCHEMA',
+                    'pk_table_name' => 'users',
+                    3 => 'users',
+                    'pk_column_name' => 'id',
+                    4 => 'id',
+                    'fk_database_name' => 'TEST_DATABASE',
+                    5 => 'TEST_DATABASE',
+                    'fk_schema_name' => 'TEST_SCHEMA',
+                    6 => 'TEST_SCHEMA',
+                    'fk_table_name' => 'articles',
+                    7 => 'articles',
+                    'fk_column_name' => 'author_id',
+                    8 => 'author_id',
+                    'key_sequence' => '1',
+                    9 => '1',
+                    'update_rule' => 'NO ACTION',
+                    10 => 'NO ACTION',
+                    'delete_rule' => 'NO ACTION',
+                    11 => 'NO ACTION',
+                    'fk_name' => 'SYS_CONSTRAINT_937e6ff8-840a-456a-853a-51770ce0849b',
+                    12 => 'SYS_CONSTRAINT_937e6ff8-840a-456a-853a-51770ce0849b',
+                    'pk_name' => 'SYS_CONSTRAINT_0b150baf-4768-4152-87cb-ca8d8f7240cf',
+                    13 => 'SYS_CONSTRAINT_0b150baf-4768-4152-87cb-ca8d8f7240cf',
+                    'deferrability' => 'NOT DEFERRABLE',
+                    14 => 'NOT DEFERRABLE',
+                    'rely' => 'false',
+                    15 => 'false',
+                    'comment' => NULL,
+                    16 => NULL,
+                ),
+            3 =>
+                array(
+                    'created_on' => '2023-04-04 02:46:48.160',
+                    0 => '2023-04-04 02:46:48.160',
+                    'pk_database_name' => 'TEST_DATABASE',
+                    1 => 'TEST_DATABASE',
+                    'pk_schema_name' => 'TEST_SCHEMA',
+                    2 => 'TEST_SCHEMA',
+                    'pk_table_name' => 'users',
+                    3 => 'users',
+                    'pk_column_name' => 'id',
+                    4 => 'id',
+                    'fk_database_name' => 'TEST_DATABASE',
+                    5 => 'TEST_DATABASE',
+                    'fk_schema_name' => 'TEST_SCHEMA',
+                    6 => 'TEST_SCHEMA',
+                    'fk_table_name' => 'articles',
+                    7 => 'articles',
+                    'fk_column_name' => 'reviewer_id',
+                    8 => 'reviewer_id',
+                    'key_sequence' => '1',
+                    9 => '1',
+                    'update_rule' => 'NO ACTION',
+                    10 => 'NO ACTION',
+                    'delete_rule' => 'NO ACTION',
+                    11 => 'NO ACTION',
+                    'fk_name' => 'LOREM_IPSUM',
+                    12 => 'LOREM_IPSUM',
+                    'pk_name' => 'SYS_CONSTRAINT_0b150baf-4768-4152-87cb-ca8d8f7240cf',
+                    13 => 'SYS_CONSTRAINT_0b150baf-4768-4152-87cb-ca8d8f7240cf',
+                    'deferrability' => 'NOT DEFERRABLE',
+                    14 => 'NOT DEFERRABLE',
+                    'rely' => 'false',
+                    15 => 'false',
+                    'comment' => NULL,
+                    16 => NULL,
+                ),
+            4 =>
+                array(
+                    'created_on' => '2023-04-04 05:16:22.883',
+                    0 => '2023-04-04 05:16:22.883',
+                    'pk_database_name' => 'TEST_DATABASE',
+                    1 => 'TEST_DATABASE',
+                    'pk_schema_name' => 'TEST_SCHEMA',
+                    2 => 'TEST_SCHEMA',
+                    'pk_table_name' => 'users',
+                    3 => 'users',
+                    'pk_column_name' => 'other_id1',
+                    4 => 'other_id1',
+                    'fk_database_name' => 'TEST_DATABASE',
+                    5 => 'TEST_DATABASE',
+                    'fk_schema_name' => 'TEST_SCHEMA',
+                    6 => 'TEST_SCHEMA',
+                    'fk_table_name' => 'blog',
+                    7 => 'blog',
+                    'fk_column_name' => 'user1_id',
+                    8 => 'user1_id',
+                    'key_sequence' => '1',
+                    9 => '1',
+                    'update_rule' => 'NO ACTION',
+                    10 => 'NO ACTION',
+                    'delete_rule' => 'NO ACTION',
+                    11 => 'NO ACTION',
+                    'fk_name' => 'main_table_blog_referenced_table_user_constraint',
+                    12 => 'main_table_blog_referenced_table_user_constraint',
+                    'pk_name' => 'SYS_CONSTRAINT_2fff8d13-7f5c-4d6c-9968-d934af4df010',
+                    13 => 'SYS_CONSTRAINT_2fff8d13-7f5c-4d6c-9968-d934af4df010',
+                    'deferrability' => 'NOT DEFERRABLE',
+                    14 => 'NOT DEFERRABLE',
+                    'rely' => 'false',
+                    15 => 'false',
+                    'comment' => NULL,
+                    16 => NULL,
+                ),
+            5 =>
+                array(
+                    'created_on' => '2023-04-04 02:46:47.562',
+                    0 => '2023-04-04 02:46:47.562',
+                    'pk_database_name' => 'TEST_DATABASE',
+                    1 => 'TEST_DATABASE',
+                    'pk_schema_name' => 'TEST_SCHEMA',
+                    2 => 'TEST_SCHEMA',
+                    'pk_table_name' => 'users',
+                    3 => 'users',
+                    'pk_column_name' => 'other_id1',
+                    4 => 'other_id1',
+                    'fk_database_name' => 'TEST_DATABASE',
+                    5 => 'TEST_DATABASE',
+                    'fk_schema_name' => 'TEST_SCHEMA',
+                    6 => 'TEST_SCHEMA',
+                    'fk_table_name' => 'articles',
+                    7 => 'articles',
+                    'fk_column_name' => 'author_id',
+                    8 => 'author_id',
+                    'key_sequence' => '1',
+                    9 => '1',
+                    'update_rule' => 'NO ACTION',
+                    10 => 'NO ACTION',
+                    'delete_rule' => 'NO ACTION',
+                    11 => 'NO ACTION',
+                    'fk_name' => 'SYS_CONSTRAINT_358724a8-e027-4b3e-8ab5-176852a7bd37',
+                    12 => 'SYS_CONSTRAINT_358724a8-e027-4b3e-8ab5-176852a7bd37',
+                    'pk_name' => 'SYS_CONSTRAINT_2fff8d13-7f5c-4d6c-9968-d934af4df010',
+                    13 => 'SYS_CONSTRAINT_2fff8d13-7f5c-4d6c-9968-d934af4df010',
+                    'deferrability' => 'NOT DEFERRABLE',
+                    14 => 'NOT DEFERRABLE',
+                    'rely' => 'false',
+                    15 => 'false',
+                    'comment' => NULL,
+                    16 => NULL,
+                ),
+            6 =>
+                array(
+                    'created_on' => '2023-04-04 05:16:22.883',
+                    0 => '2023-04-04 05:16:22.883',
+                    'pk_database_name' => 'TEST_DATABASE',
+                    1 => 'TEST_DATABASE',
+                    'pk_schema_name' => 'TEST_SCHEMA',
+                    2 => 'TEST_SCHEMA',
+                    'pk_table_name' => 'users',
+                    3 => 'users',
+                    'pk_column_name' => 'other_id2',
+                    4 => 'other_id2',
+                    'fk_database_name' => 'TEST_DATABASE',
+                    5 => 'TEST_DATABASE',
+                    'fk_schema_name' => 'TEST_SCHEMA',
+                    6 => 'TEST_SCHEMA',
+                    'fk_table_name' => 'blog',
+                    7 => 'blog',
+                    'fk_column_name' => 'user2_id',
+                    8 => 'user2_id',
+                    'key_sequence' => '2',
+                    9 => '2',
+                    'update_rule' => 'NO ACTION',
+                    10 => 'NO ACTION',
+                    'delete_rule' => 'NO ACTION',
+                    11 => 'NO ACTION',
+                    'fk_name' => 'main_table_blog_referenced_table_user_constraint',
+                    12 => 'main_table_blog_referenced_table_user_constraint',
+                    'pk_name' => 'SYS_CONSTRAINT_2fff8d13-7f5c-4d6c-9968-d934af4df010',
+                    13 => 'SYS_CONSTRAINT_2fff8d13-7f5c-4d6c-9968-d934af4df010',
+                    'deferrability' => 'NOT DEFERRABLE',
+                    14 => 'NOT DEFERRABLE',
+                    'rely' => 'false',
+                    15 => 'false',
+                    'comment' => NULL,
+                    16 => NULL,
+                ),
+            7 =>
+                array(
+                    'created_on' => '2023-04-04 02:46:47.562',
+                    0 => '2023-04-04 02:46:47.562',
+                    'pk_database_name' => 'TEST_DATABASE',
+                    1 => 'TEST_DATABASE',
+                    'pk_schema_name' => 'TEST_SCHEMA',
+                    2 => 'TEST_SCHEMA',
+                    'pk_table_name' => 'users',
+                    3 => 'users',
+                    'pk_column_name' => 'other_id2',
+                    4 => 'other_id2',
+                    'fk_database_name' => 'TEST_DATABASE',
+                    5 => 'TEST_DATABASE',
+                    'fk_schema_name' => 'TEST_SCHEMA',
+                    6 => 'TEST_SCHEMA',
+                    'fk_table_name' => 'articles',
+                    7 => 'articles',
+                    'fk_column_name' => 'reviewer_id',
+                    8 => 'reviewer_id',
+                    'key_sequence' => '2',
+                    9 => '2',
+                    'update_rule' => 'NO ACTION',
+                    10 => 'NO ACTION',
+                    'delete_rule' => 'NO ACTION',
+                    11 => 'NO ACTION',
+                    'fk_name' => 'SYS_CONSTRAINT_358724a8-e027-4b3e-8ab5-176852a7bd37',
+                    12 => 'SYS_CONSTRAINT_358724a8-e027-4b3e-8ab5-176852a7bd37',
+                    'pk_name' => 'SYS_CONSTRAINT_2fff8d13-7f5c-4d6c-9968-d934af4df010',
+                    13 => 'SYS_CONSTRAINT_2fff8d13-7f5c-4d6c-9968-d934af4df010',
+                    'deferrability' => 'NOT DEFERRABLE',
+                    14 => 'NOT DEFERRABLE',
+                    'rely' => 'false',
+                    15 => 'false',
+                    'comment' => NULL,
+                    16 => NULL,
+                ),
+        );
+        $tableNameBlogFetchAllWillReturn = [$withoutTableNameFetchAllWillReturn[4], $withoutTableNameFetchAllWillReturn[6]];
         return [
             'table name is specified' => [
-                'tableName' => 'table',
-                'expectedSql' => 'show imported keys in table "table"',
+                'tableName' => 'blog',
+                'expectedSql' => 'show imported keys in table "blog"',
+                'fetchAllWillReturn' => $tableNameBlogFetchAllWillReturn,
+                'expectedForeignKeys' => array(
+                    'main_table_blog_referenced_table_user_constraint' =>
+                        array(
+                            'table' => 'TEST_DATABASE.TEST_SCHEMA.blog',
+                            'columns' =>
+                                array(
+                                    0 => 'user1_id',
+                                    1 => 'user2_id',
+                                ),
+                            'referenced_table' => 'TEST_DATABASE.TEST_SCHEMA.users',
+                            'referenced_columns' =>
+                                array(
+                                    0 => 'other_id1',
+                                    1 => 'other_id2',
+                                ),
+                        ),
+                )
             ],
             'table name is not specified' => [
                 'tableName' => '',
                 'expectedSql' => 'show imported keys',
+                'fetchAllWillReturn' => $withoutTableNameFetchAllWillReturn,
+                'expectedForeignKeys' => array(
+                    'parent_child_foreign_key_constraint' =>
+                        array(
+                            'table' => 'TEST_DATABASE.TEST_SCHEMA.multiuniquechild',
+                            'columns' =>
+                                array(
+                                    0 => 'parent_id1',
+                                    1 => 'parent_id2',
+                                ),
+                            'referenced_table' => 'TEST_DATABASE.TEST_SCHEMA.multiuniqueparent',
+                            'referenced_columns' =>
+                                array(
+                                    0 => 'id1',
+                                    1 => 'id2',
+                                ),
+                        ),
+                    'SYS_CONSTRAINT_937e6ff8-840a-456a-853a-51770ce0849b' =>
+                        array(
+                            'table' => 'TEST_DATABASE.TEST_SCHEMA.articles',
+                            'columns' =>
+                                array(
+                                    0 => 'author_id',
+                                ),
+                            'referenced_table' => 'TEST_DATABASE.TEST_SCHEMA.users',
+                            'referenced_columns' =>
+                                array(
+                                    0 => 'id',
+                                ),
+                        ),
+                    'LOREM_IPSUM' =>
+                        array(
+                            'table' => 'TEST_DATABASE.TEST_SCHEMA.articles',
+                            'columns' =>
+                                array(
+                                    0 => 'reviewer_id',
+                                ),
+                            'referenced_table' => 'TEST_DATABASE.TEST_SCHEMA.users',
+                            'referenced_columns' =>
+                                array(
+                                    0 => 'id',
+                                ),
+                        ),
+                    'main_table_blog_referenced_table_user_constraint' =>
+                        array(
+                            'table' => 'TEST_DATABASE.TEST_SCHEMA.blog',
+                            'columns' =>
+                                array(
+                                    0 => 'user1_id',
+                                    1 => 'user2_id',
+                                ),
+                            'referenced_table' => 'TEST_DATABASE.TEST_SCHEMA.users',
+                            'referenced_columns' =>
+                                array(
+                                    0 => 'other_id1',
+                                    1 => 'other_id2',
+                                ),
+                        ),
+                    'SYS_CONSTRAINT_358724a8-e027-4b3e-8ab5-176852a7bd37' =>
+                        array(
+                            'table' => 'TEST_DATABASE.TEST_SCHEMA.articles',
+                            'columns' =>
+                                array(
+                                    0 => 'author_id',
+                                    1 => 'reviewer_id',
+                                ),
+                            'referenced_table' => 'TEST_DATABASE.TEST_SCHEMA.users',
+                            'referenced_columns' =>
+                                array(
+                                    0 => 'other_id1',
+                                    1 => 'other_id2',
+                                ),
+                        ),
+                )
             ],
         ];
     }
