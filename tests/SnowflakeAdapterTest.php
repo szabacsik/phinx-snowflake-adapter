@@ -2525,4 +2525,53 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider hasForeignKeyDataProvider
+     * @throws Exception
+     */
+    public function testHasForeignKey(string $tableName, array|string|null $columns, string|null $constraint, bool $expected)
+    {
+        $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
+        $adapter->expects($this->once())
+            ->method('fetchAll')
+            ->willReturn(self::getForeignKeysDataProvider()['table name is not specified']['fetchAllWillReturn']);
+        $this->assertEquals($expected, $adapter->hasForeignKey($tableName, $columns, $constraint));
+    }
+
+    public static function hasForeignKeyDataProvider(): array
+    {
+        return [
+            'two columns' => [
+                'tableName' => 'blog',
+                'columns' => ['user1_id', 'user2_id'],
+                'constraint' => '',
+                'expected' => true,
+            ],
+            'one column' => [
+                'tableName' => 'articles',
+                'columns' => 'author_id',
+                'constraint' => '',
+                'expected' => true,
+            ],
+            'existing constraint' => [
+                'tableName' => 'blog',
+                'columns' => null,
+                'constraint' => 'main_table_blog_referenced_table_user_constraint',
+                'expected' => true,
+            ],
+            'non-existing constraint' => [
+                'tableName' => 'blog',
+                'columns' => null,
+                'constraint' => 'non-existing constraint',
+                'expected' => false,
+            ],
+            'nothing' => [
+                'tableName' => '',
+                'columns' => null,
+                'constraint' => null,
+                'expected' => false,
+            ],
+        ];
+    }
+
 }

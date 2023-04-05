@@ -239,7 +239,22 @@ class SnowflakeAdapter extends PdoAdapter
 
     public function hasForeignKey(string $tableName, $columns, ?string $constraint = null): bool
     {
-        // TODO: Implement hasForeignKey() method.
+        if (is_string($columns)) {
+            $columns = [$columns];
+        }
+        $foreignKeys = $this->getForeignKeys($tableName);
+        if ($constraint) {
+            if (isset($foreignKeys[$constraint])) {
+                return !empty($foreignKeys[$constraint]);
+            }
+            return false;
+        }
+        foreach ($foreignKeys as $key) {
+            if ($columns == $key['columns']) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function getSqlType($type, ?int $limit = null): array
