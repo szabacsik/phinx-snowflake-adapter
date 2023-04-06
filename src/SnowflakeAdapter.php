@@ -756,7 +756,7 @@ class SnowflakeAdapter extends PdoAdapter
             // - geometry -
             'geometry' => 'geometry',
         ];
-        if ($types[$type]) {
+        if (isset($types[$type])) {
             return $types[$type];
         }
         throw new InvalidArgumentException(sprintf('Unknown data type: `%s`', $type));
