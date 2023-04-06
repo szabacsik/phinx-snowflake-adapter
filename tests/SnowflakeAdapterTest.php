@@ -2574,4 +2574,19 @@ class SnowflakeAdapterTest extends TestCase
         ];
     }
 
+    /**
+     * @throws ReflectionException
+     */
+    public function testGetDropForeignKeyInstructions()
+    {
+        $tableName = 'table';
+        $constraint = 'lorem ipsum dolor sit amet';
+        $expected = 'drop constraint "lorem ipsum dolor sit amet"';
+        $adapter = new SnowflakeAdapter([]);
+        $reflection = new ReflectionObject($adapter);
+        $method = $reflection->getMethod('getDropForeignKeyInstructions');
+        $instructions = $method->invoke($adapter, $tableName, $constraint);
+        $this->assertEquals($expected, $instructions->getAlterParts()[0]);
+    }
+
 }

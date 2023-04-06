@@ -460,7 +460,13 @@ class SnowflakeAdapter extends PdoAdapter
 
     protected function getDropForeignKeyInstructions(string $tableName, string $constraint): AlterInstructions
     {
-        // TODO: Implement getDropForeignKeyInstructions() method.
+        $sql = sprintf('drop constraint %s', $this->quoteConstraint($constraint));
+        return new AlterInstructions([$sql]);
+    }
+
+    public function quoteConstraint(string $constraint): string
+    {
+        return '"' . $constraint . '"';
     }
 
     protected function getDropForeignKeyByColumnsInstructions(string $tableName, array $columns): AlterInstructions
