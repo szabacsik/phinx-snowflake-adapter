@@ -327,12 +327,20 @@ class SnowflakeAdapterTest extends TestCase
                 'options' => ['primary-key' => ['lorem', 'ipsum']],
                 'indexes' => [],
                 'columns' => [
-                    ['type' => 'number', 'name' => 'id', 'null' => false, 'identity' => true, 'properties' => ['primary key']],
+                    [
+                        'type' => 'number', 'name' => 'id', 'null' => false, 'identity' => true,
+                        'properties' => ['primary key']
+                    ],
                     ['type' => 'varchar', 'name' => 'varchar', 'null' => false, 'identity' => false],
                     ['type' => 'datetime', 'name' => 'datetime', 'null' => false, 'identity' => false],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("id" number identity not null, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("lorem", "ipsum"), primary key ("id"))',
+                    'create table "my_awesome_table" (' .
+                    '"id" number identity not null, ' .
+                    '"varchar" varchar not null, ' .
+                    '"datetime" timestamp_ntz not null, ' .
+                    'primary key ("lorem", "ipsum"), ' .
+                    'primary key ("id"))',
             ],
             'phinxlog' => [
                 'name' => 'phinxlog',
@@ -346,7 +354,13 @@ class SnowflakeAdapterTest extends TestCase
                     ['name' => 'breakpoint', 'type' => 'boolean', 'default' => false, 'null' => false]
                 ],
                 'expected' =>
-                    'create table "phinxlog" ("version" number not null, "migration_name" varchar(100) null, "start_time" timestamp null, "end_time" timestamp null, "breakpoint" boolean not null default false, primary key ("version"))'
+                    'create table "phinxlog" (' .
+                    '"version" number not null, ' .
+                    '"migration_name" varchar(100) null, ' .
+                    '"start_time" timestamp null, ' .
+                    '"end_time" timestamp null, ' .
+                    '"breakpoint" boolean not null default false, ' .
+                    'primary key ("version"))'
             ],
             'table without id column set' => [
                 'name' => 'my_awesome_table',
@@ -358,7 +372,12 @@ class SnowflakeAdapterTest extends TestCase
                     ['type' => 'datetime', 'name' => 'datetime', 'null' => false],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("id" number identity not null, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("id"))',
+                    'create table "my_awesome_table" (' .
+                    '"id" number identity not null, ' .
+                    '"number" number not null, ' .
+                    '"varchar" varchar not null, ' .
+                    '"datetime" timestamp_ntz not null, ' .
+                    'primary key ("id"))',
             ],
             'table with id column name set in options' => [
                 'name' => 'my_awesome_table',
@@ -370,18 +389,29 @@ class SnowflakeAdapterTest extends TestCase
                     ['type' => 'datetime', 'name' => 'datetime', 'null' => false],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("MyUniqueId" number identity not null, "number" number not null, "varchar" varchar not null, "datetime" timestamp_ntz not null, primary key ("MyUniqueId"))',
+                    'create table "my_awesome_table" (' .
+                    '"MyUniqueId" number identity not null, ' .
+                    '"number" number not null, ' .
+                    '"varchar" varchar not null, ' .
+                    '"datetime" timestamp_ntz not null, ' .
+                    'primary key ("MyUniqueId"))',
             ],
             'table using UUID for the primary id column' => [
                 'name' => 'my_awesome_table',
                 'options' => [],
                 'indexes' => [],
                 'columns' => [
-                    ['type' => 'varchar', 'name' => 'id', 'limit' => 36, 'null' => false, 'properties' => ['primary key'], 'default' => 'uuid_string()'],
+                    [
+                        'type' => 'varchar', 'name' => 'id', 'limit' => 36, 'null' => false,
+                        'properties' => ['primary key'], 'default' => 'uuid_string()'
+                    ],
                     ['type' => 'number', 'name' => 'other'],
                 ],
                 'expected' =>
-                    'create table "my_awesome_table" ("id" varchar(36) not null default uuid_string(), "other" number null, primary key ("id"))',
+                    'create table "my_awesome_table" (' .
+                    '"id" varchar(36) not null default uuid_string(), ' .
+                    '"other" number null, ' .
+                    'primary key ("id"))',
             ],
             'Let’s disable the automatic id column and create a primary key using two columns' => [
                 'name' => 'followers',
@@ -393,7 +423,11 @@ class SnowflakeAdapterTest extends TestCase
                     ['name' => 'created', 'type' => 'datetime'],
                 ],
                 'expected' =>
-                    'create table "followers" ("user_id" number null, "follower_id" number null, "created" timestamp_ntz null, primary key ("user_id", "follower_id"))',
+                    'create table "followers" (' .
+                    '"user_id" number null, ' .
+                    '"follower_id" number null, ' .
+                    '"created" timestamp_ntz null, ' .
+                    'primary key ("user_id", "follower_id"))',
             ],
             'Add unique constraint' => [
                 'name' => 'table',
@@ -405,7 +439,11 @@ class SnowflakeAdapterTest extends TestCase
                     ['name' => 'created', 'type' => 'datetime'],
                 ],
                 'expected' =>
-                    'create table "table" ("column1" number null, "column2" number null, "created" timestamp_ntz null, unique ("column1", "column2"))',
+                    'create table "table" (' .
+                    '"column1" number null, ' .
+                    '"column2" number null, ' .
+                    '"created" timestamp_ntz null, ' .
+                    'unique ("column1", "column2"))',
             ],
             'Some indexes' => [
                 'name' => 'table',
@@ -476,9 +514,17 @@ class SnowflakeAdapterTest extends TestCase
         $this->assertCount(count($rows), $versionLog);
         foreach ($rows as $row) {
             if (in_array($row['breakpoint'], [1, '1', 'true', true], true)) {
-                $this->assertEquals(1, $versionLog[$row['version']]['breakpoint'], 'Failed breakpoint with version: ' . $row['version'] . '.');
+                $this->assertEquals(
+                    1,
+                    $versionLog[$row['version']]['breakpoint'],
+                    'Failed breakpoint with version: ' . $row['version'] . '.'
+                );
             } else {
-                $this->assertEquals(0, $versionLog[$row['version']]['breakpoint'], 'Failed breakpoint with version: ' . $row['version'] . '.');
+                $this->assertEquals(
+                    0,
+                    $versionLog[$row['version']]['breakpoint'],
+                    'Failed breakpoint with version: ' . $row['version'] . '.'
+                );
             }
         }
     }
@@ -558,7 +604,7 @@ class SnowflakeAdapterTest extends TestCase
 
     public static function columnTypeDataProvider(): array
     {
-        $createColumnAndSetType = fn($type) => (new Column)->setType($type);
+        $createColumnAndSetType = fn($type) => (new Column())->setType($type);
         return [
             'number' => [
                 'column' => $createColumnAndSetType('number'),
@@ -767,7 +813,10 @@ class SnowflakeAdapterTest extends TestCase
         $alterInstructions = $method->invoke($adapter, $tableName, $columnName, $newColumnName);
         $this->assertInstanceOf(AlterInstructions::class, $alterInstructions);
         $this->assertCount(1, $alterInstructions->getAlterParts());
-        $this->assertEquals("rename column \"$columnName\" to \"$newColumnName\"", $alterInstructions->getAlterParts()[0]);
+        $this->assertEquals(
+            "rename column \"$columnName\" to \"$newColumnName\"",
+            $alterInstructions->getAlterParts()[0]
+        );
     }
 
     public function testGetRenameTableInstructions()
@@ -888,9 +937,12 @@ class SnowflakeAdapterTest extends TestCase
         $adapter->shouldReceive('hasPrimaryKey')->andReturn(true);
         $reflection = new ReflectionObject($adapter);
         $getChangePrimaryKeyInstructionsMethod = $reflection->getMethod('getChangePrimaryKeyInstructions');
-        $changePrimaryKeyWithoutColumnInstructions = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, null);
-        $changePrimaryKeySingleColumnInstructions = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, $newColumn);
-        $changePrimaryKeyManyColumnsInstructions = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, $newColumns);
+        $changePrimaryKeyWithoutColumnInstructions
+            = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, null);
+        $changePrimaryKeySingleColumnInstructions
+            = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, $newColumn);
+        $changePrimaryKeyManyColumnsInstructions
+            = $getChangePrimaryKeyInstructionsMethod->invoke($adapter, $table, $newColumns);
         return [
             'change primary key, without column' => [
                 'tableName' => $tableName,
@@ -912,7 +964,11 @@ class SnowflakeAdapterTest extends TestCase
                 'instructions' => $changePrimaryKeyManyColumnsInstructions,
                 'expected' => [
                     sprintf('alter table "%s" drop primary key', $tableName),
-                    sprintf('alter table "%s" add primary key ("%s")', $tableName, implode('","', $newColumns)),
+                    sprintf(
+                        'alter table "%s" add primary key ("%s")',
+                        $tableName,
+                        implode('","', $newColumns)
+                    ),
                 ]
             ],
             'instruction with string post steps' => [
@@ -1007,12 +1063,18 @@ class SnowflakeAdapterTest extends TestCase
             'columns is string, referenceColumns contains a string, constraint is specified' => [
                 'table' => $table,
                 'foreignKey' => $foreignKey2,
-                'expected' => ['add constraint "myConstraint" foreign key ("column1") references "referencedTable"("referencedColumn1")']
+                'expected' => [
+                    'add constraint "myConstraint" foreign key ("column1") ' .
+                    'references "referencedTable"("referencedColumn1")'
+                ]
             ],
             'columns is array, referenceColumns contains two strings, constraint is empty' => [
                 'table' => $table,
                 'foreignKey' => $foreignKey3,
-                'expected' => ['add foreign key ("column1","column2") references "referencedTable"("referencedColumn1","referencedColumn2")']
+                'expected' => [
+                    'add foreign key ("column1","column2") ' .
+                    'references "referencedTable"("referencedColumn1","referencedColumn2")'
+                ]
             ],
         ];
     }
@@ -1173,7 +1235,10 @@ class SnowflakeAdapterTest extends TestCase
         $column7->setType('varchar');
         $column7->setLimit(16777216);
         $column7->setNull(true);
-        $column7->setDefault('CAST(CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)) AS VARCHAR(16777216))');
+        $column7->setDefault(
+            'CAST(CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS ' .
+            'TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)) AS VARCHAR(16777216))'
+        );
         $column7->setComment('');
 
         $column8 = new Column();
@@ -1200,7 +1265,10 @@ class SnowflakeAdapterTest extends TestCase
         $column10->setPrecision(0);
         $column10->setScale(9);
         $column10->setNull(true);
-        $column10->setDefault('CONVERT_TIMEZONE(\'UTC\', \'Europe/Budapest\', CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)))');
+        $column10->setDefault(
+            'CONVERT_TIMEZONE(\'UTC\', \'Europe/Budapest\', CAST(CONVERT_TIMEZONE(\'UTC\', ' .
+            'CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)))'
+        );
 
         $column11 = new Column();
         $column11->setName('column11');
@@ -1344,7 +1412,8 @@ class SnowflakeAdapterTest extends TestCase
                     'table_name' => 'allin',
                     'schema_name' => 'TEST_SCHEMA',
                     'column_name' => 'column6',
-                    'data_type' => '{"type":"TEXT","length":16777216,"byteLength":16777216,"nullable":true,"fixed":false}',
+                    'data_type' =>
+                        '{"type":"TEXT","length":16777216,"byteLength":16777216,"nullable":true,"fixed":false}',
                     'null?' => 'true',
                     'default' => '',
                     'kind' => 'COLUMN',
@@ -1360,9 +1429,12 @@ class SnowflakeAdapterTest extends TestCase
                     'table_name' => 'allin',
                     'schema_name' => 'TEST_SCHEMA',
                     'column_name' => 'column7',
-                    'data_type' => '{"type":"TEXT","length":16777216,"byteLength":16777216,"nullable":true,"fixed":false}',
+                    'data_type' =>
+                        '{"type":"TEXT","length":16777216,"byteLength":16777216,"nullable":true,"fixed":false}',
                     'null?' => 'true',
-                    'default' => 'CAST(CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)) AS VARCHAR(16777216))',
+                    'default' =>
+                        'CAST(CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS ' .
+                        'TIMESTAMP_NTZ(9)) AS VARCHAR(16777216))',
                     'kind' => 'COLUMN',
                     'expression' => '',
                     'comment' => '',
@@ -1376,7 +1448,8 @@ class SnowflakeAdapterTest extends TestCase
                     'table_name' => 'allin',
                     'schema_name' => 'TEST_SCHEMA',
                     'column_name' => 'column8',
-                    'data_type' => '{"type":"TEXT","length":10,"byteLength":40,"nullable":true,"fixed":false,"collation":"en-cs"}',
+                    'data_type' =>
+                        '{"type":"TEXT","length":10,"byteLength":40,"nullable":true,"fixed":false,"collation":"en-cs"}',
                     'null?' => 'true',
                     'default' => '',
                     'kind' => 'COLUMN',
@@ -1392,7 +1465,9 @@ class SnowflakeAdapterTest extends TestCase
                     'table_name' => 'allin',
                     'schema_name' => 'TEST_SCHEMA',
                     'column_name' => 'column9',
-                    'data_type' => '{"type":"TEXT","length":10,"byteLength":40,"nullable":false,"fixed":false,"collation":"en-cs"}',
+                    'data_type' =>
+                        '{"type":"TEXT","length":10,"byteLength":40,' .
+                        '"nullable":false,"fixed":false,"collation":"en-cs"}',
                     'null?' => 'NOT_NULL',
                     'default' => '\'none\'',
                     'kind' => 'COLUMN',
@@ -1410,7 +1485,9 @@ class SnowflakeAdapterTest extends TestCase
                     'column_name' => 'column10',
                     'data_type' => '{"type":"TIMESTAMP_NTZ","precision":0,"scale":9,"nullable":true}',
                     'null?' => 'true',
-                    'default' => 'CONVERT_TIMEZONE(\'UTC\', \'Europe/Budapest\', CAST(CONVERT_TIMEZONE(\'UTC\', CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)))',
+                    'default' =>
+                        'CONVERT_TIMEZONE(\'UTC\', \'Europe/Budapest\', CAST(CONVERT_TIMEZONE(\'UTC\', ' .
+                        'CAST(CURRENT_TIMESTAMP() AS TIMESTAMP_TZ(9))) AS TIMESTAMP_NTZ(9)))',
                     'kind' => 'COLUMN',
                     'expression' => '',
                     'comment' => '',
@@ -1555,8 +1632,11 @@ class SnowflakeAdapterTest extends TestCase
      * @dataProvider getChangeColumnInstructionsDataProvider
      */
 
-    public function testGetChangeColumnInstructions(Column $newColumn, array $columns, AlterInstructions $expectedInstructions)
-    {
+    public function testGetChangeColumnInstructions(
+        Column $newColumn,
+        array $columns,
+        AlterInstructions $expectedInstructions
+    ) {
         $tableName = 'table';
         $columnName = $newColumn->getName();
         $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['getColumns']);
@@ -1583,7 +1663,9 @@ class SnowflakeAdapterTest extends TestCase
         $newColumn->setType('varchar');
         $newColumn->setDefault(null);
         $instructions = new AlterInstructions([sprintf(
-            'alter column "%s" drop default', $columnName)
+            'alter column "%s" drop default',
+            $columnName
+        )
         ]);
         $tests['Drop the default for a column'] = [
             'newColumn' => $newColumn,
@@ -1601,7 +1683,9 @@ class SnowflakeAdapterTest extends TestCase
         $newColumn->setType('number');
         $newColumn->setDefault('sequence_02.nextval');
         $instructions = new AlterInstructions([sprintf(
-            'alter column "%s" set default sequence_02.nextval', $columnName)
+            'alter column "%s" set default sequence_02.nextval',
+            $columnName
+        )
         ]);
         $tests['Change the default sequence for a column'] = [
             'newColumn' => $newColumn,
@@ -1809,7 +1893,6 @@ class SnowflakeAdapterTest extends TestCase
             }
         }*/
         return $tests;
-
     }
 
     /**
@@ -1880,13 +1963,15 @@ class SnowflakeAdapterTest extends TestCase
                     ['column1' => 'value1 row4', 'column2' => 'value2 row4', 'column3' => 'value3 row4'],
                 ],
                 'expected' => [
-                    'preparedStatementWithNamedParameters' => 'insert into "table" ("column1","column2","column3") values ' .
+                    'preparedStatementWithNamedParameters' =>
+                        'insert into "table" ("column1","column2","column3") values ' .
                         '(:0column1,:0column2,:0column3),' .
                         '(:1column1,:1column2,:1column3),' .
                         '(:2column1,:2column2,:2column3),' .
                         '(:3column1,:3column2,:3column3),' .
                         '(:4column1,:4column2,:4column3)',
-                    'preparedStatementWithQuestionMarkParameters' => 'insert into "table" ("column1","column2","column3") values ' .
+                    'preparedStatementWithQuestionMarkParameters' =>
+                        'insert into "table" ("column1","column2","column3") values ' .
                         '(?,?,?),' .
                         '(?,?,?),' .
                         '(?,?,?),' .
@@ -1987,7 +2072,8 @@ class SnowflakeAdapterTest extends TestCase
                 'float', 'float4', 'float8', 'double', 'double precision', 'real',
             ],
             'varchar' => [
-                'varchar', 'char', 'character', 'nchar', 'string', 'text', 'nvarchar', 'nvarchar2', 'char varying', 'nchar varying',
+                'varchar', 'char', 'character', 'nchar', 'string', 'text',
+                'nvarchar', 'nvarchar2', 'char varying', 'nchar varying',
             ],
             'boolean' => [
                 'boolean',
@@ -2039,8 +2125,12 @@ class SnowflakeAdapterTest extends TestCase
      * @dataProvider getForeignKeysDataProvider
      * @throws Exception
      */
-    public function testGetForeignKeys(string $tableName, string $expectedSql, array $fetchAllWillReturn, array $expectedForeignKeys)
-    {
+    public function testGetForeignKeys(
+        string $tableName,
+        string $expectedSql,
+        array $fetchAllWillReturn,
+        array $expectedForeignKeys
+    ) {
         $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
         $adapter->expects($this->once())
             ->method('fetchAll')
@@ -2087,8 +2177,8 @@ class SnowflakeAdapterTest extends TestCase
                     14 => 'NOT DEFERRABLE',
                     'rely' => 'false',
                     15 => 'false',
-                    'comment' => NULL,
-                    16 => NULL,
+                    'comment' => null,
+                    16 => null,
                 ),
             1 =>
                 array(
@@ -2124,8 +2214,8 @@ class SnowflakeAdapterTest extends TestCase
                     14 => 'NOT DEFERRABLE',
                     'rely' => 'false',
                     15 => 'false',
-                    'comment' => NULL,
-                    16 => NULL,
+                    'comment' => null,
+                    16 => null,
                 ),
             2 =>
                 array(
@@ -2161,8 +2251,8 @@ class SnowflakeAdapterTest extends TestCase
                     14 => 'NOT DEFERRABLE',
                     'rely' => 'false',
                     15 => 'false',
-                    'comment' => NULL,
-                    16 => NULL,
+                    'comment' => null,
+                    16 => null,
                 ),
             3 =>
                 array(
@@ -2198,8 +2288,8 @@ class SnowflakeAdapterTest extends TestCase
                     14 => 'NOT DEFERRABLE',
                     'rely' => 'false',
                     15 => 'false',
-                    'comment' => NULL,
-                    16 => NULL,
+                    'comment' => null,
+                    16 => null,
                 ),
             4 =>
                 array(
@@ -2235,8 +2325,8 @@ class SnowflakeAdapterTest extends TestCase
                     14 => 'NOT DEFERRABLE',
                     'rely' => 'false',
                     15 => 'false',
-                    'comment' => NULL,
-                    16 => NULL,
+                    'comment' => null,
+                    16 => null,
                 ),
             5 =>
                 array(
@@ -2272,8 +2362,8 @@ class SnowflakeAdapterTest extends TestCase
                     14 => 'NOT DEFERRABLE',
                     'rely' => 'false',
                     15 => 'false',
-                    'comment' => NULL,
-                    16 => NULL,
+                    'comment' => null,
+                    16 => null,
                 ),
             6 =>
                 array(
@@ -2309,8 +2399,8 @@ class SnowflakeAdapterTest extends TestCase
                     14 => 'NOT DEFERRABLE',
                     'rely' => 'false',
                     15 => 'false',
-                    'comment' => NULL,
-                    16 => NULL,
+                    'comment' => null,
+                    16 => null,
                 ),
             7 =>
                 array(
@@ -2346,11 +2436,12 @@ class SnowflakeAdapterTest extends TestCase
                     14 => 'NOT DEFERRABLE',
                     'rely' => 'false',
                     15 => 'false',
-                    'comment' => NULL,
-                    16 => NULL,
+                    'comment' => null,
+                    16 => null,
                 ),
         );
-        $tableNameBlogFetchAllWillReturn = [$withoutTableNameFetchAllWillReturn[4], $withoutTableNameFetchAllWillReturn[6]];
+        $tableNameBlogFetchAllWillReturn
+            = [$withoutTableNameFetchAllWillReturn[4], $withoutTableNameFetchAllWillReturn[6]];
         return [
             'table name is specified' => [
                 'tableName' => 'blog',
@@ -2529,8 +2620,12 @@ class SnowflakeAdapterTest extends TestCase
      * @dataProvider hasForeignKeyDataProvider
      * @throws Exception
      */
-    public function testHasForeignKey(string $tableName, array|string|null $columns, string|null $constraint, bool $expected)
-    {
+    public function testHasForeignKey(
+        string $tableName,
+        array|string|null $columns,
+        string|null $constraint,
+        bool $expected
+    ) {
         $adapter = $this->createPartialMock(SnowflakeAdapter::class, ['fetchAll']);
         $adapter->expects($this->once())
             ->method('fetchAll')
@@ -2588,5 +2683,4 @@ class SnowflakeAdapterTest extends TestCase
         $instructions = $method->invoke($adapter, $tableName, $constraint);
         $this->assertEquals($expected, $instructions->getAlterParts()[0]);
     }
-
 }

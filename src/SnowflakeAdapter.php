@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Szabacsik\Phinx;
@@ -103,13 +104,23 @@ class SnowflakeAdapter extends PdoAdapter
         $primaryKeys = [];
 
         foreach ($columns as $column) {
-            $sql .= $this->quoteColumnName($column->getName()) . ' ' . $this->getColumnSqlDefinition($column) . $separator;
-            if (array_intersect(['primary key', 'primary-key', 'primary_key', 'primarykey'], $column->getProperties())) {
+            $sql .=
+                $this->quoteColumnName($column->getName()) .
+                ' ' .
+                $this->getColumnSqlDefinition($column) .
+                $separator;
+            $pk = ['primary key', 'primary-key', 'primary_key', 'primarykey'];
+            if (array_intersect($pk, $column->getProperties())) {
                 $primaryKeys[] = $column->getName();
             }
         }
 
-        $optionPrimaryKey = $options['primary key'] ?? $options['primary_key'] ?? $options['primary-key'] ?? $options['primarykey'] ?? null;
+        $optionPrimaryKey
+            = $options['primary key']
+            ?? $options['primary_key']
+            ?? $options['primary-key']
+            ?? $options['primarykey']
+            ?? null;
         if ($optionPrimaryKey) {
             $primaryKeys[] = $optionPrimaryKey;
         }
@@ -160,14 +171,17 @@ class SnowflakeAdapter extends PdoAdapter
             $name = $row['column_name'];
             $dataType = json_decode($row['data_type'], true);
             $types = ['varchar' => 'TEXT', 'number' => 'FIXED', 'float' => 'REAL'];
-            $type = in_array($dataType['type'], $types) ? array_search($dataType['type'], $types) : strtolower($dataType['type']);
+            $type
+                = in_array($dataType['type'], $types)
+                ? array_search($dataType['type'], $types)
+                : strtolower($dataType['type']);
             $precision = $dataType['precision'] ?? null;
             $scale = $dataType['scale'] ?? null;
             $length = $dataType['length'] ?? null;
             $nullable = $dataType['nullable'] ?? $row['null?'] == 'true' ?? false;
             if (isset($row['default']) && !empty($row['default'])) {
                 switch (gettype($row['default'])) {
-                    case 'string' :
+                    case 'string':
                         if (!in_array(strtolower($row['default']), ['true', 'false'])) {
                             $default = preg_replace("/^'|'$/", "", $row['default']);
                         } else {
@@ -307,8 +321,11 @@ class SnowflakeAdapter extends PdoAdapter
     /**
      * @link https://docs.snowflake.com/en/sql-reference/sql/alter-table.html
      */
-    protected function getRenameColumnInstructions(string $tableName, string $columnName, string $newColumnName): AlterInstructions
-    {
+    protected function getRenameColumnInstructions(
+        string $tableName,
+        string $columnName,
+        string $newColumnName
+    ): AlterInstructions {
         // rename column old_name to new_name;
         return new AlterInstructions([sprintf(
             'rename column %s to %s',
@@ -317,8 +334,11 @@ class SnowflakeAdapter extends PdoAdapter
         )]);
     }
 
-    protected function getChangeColumnInstructions(string $tableName, string $columnName, Column $newColumn): AlterInstructions
-    {
+    protected function getChangeColumnInstructions(
+        string $tableName,
+        string $columnName,
+        Column $newColumn
+    ): AlterInstructions {
         // https://docs.snowflake.com/en/sql-reference/sql/alter-table-column
         // https://book.cakephp.org/phinx/0/en/migrations.html#changing-column-attributes
         $currentColumn = null;
@@ -412,7 +432,6 @@ class SnowflakeAdapter extends PdoAdapter
         }
 
         return $instruction;
-
     }
 
     /**
@@ -425,7 +444,7 @@ class SnowflakeAdapter extends PdoAdapter
 
     protected function getAddIndexInstructions(Table $table, Index $index): AlterInstructions
     {
-        if($index->getType() != 'unique') {
+        if ($index->getType() != 'unique') {
             throw new InvalidArgumentException(sprintf('Invalid index type: `%s`', $index->getType()));
         }
         $index->getName() ? $name = sprintf(' "%s"', $index->getName()) : $name = '';
@@ -450,11 +469,21 @@ class SnowflakeAdapter extends PdoAdapter
 
     protected function getAddForeignKeyInstructions(Table $table, ForeignKey $foreignKey): AlterInstructions
     {
-        $constraint = $foreignKey->getConstraint() ? ' constraint ' . $this->quoteColumnName($foreignKey->getConstraint()) : '';
+        $constraint
+            = $foreignKey->getConstraint()
+            ? ' constraint ' . $this->quoteColumnName($foreignKey->getConstraint())
+            : '';
         $columns = implode(',', array_map([$this, 'quoteColumnName'], $foreignKey->getColumns()));
-        $referencedColumns = implode(',', array_map([$this, 'quoteColumnName'], $foreignKey->getReferencedColumns()));
+        $referencedColumns
+            = implode(',', array_map([$this, 'quoteColumnName'], $foreignKey->getReferencedColumns()));
         $referencedTable = $this->quoteTableName($foreignKey->getReferencedTable()->getName());
-        $sql = sprintf('add%s foreign key (%s) references %s(%s)', $constraint, $columns, $referencedTable, $referencedColumns);
+        $sql = sprintf(
+            'add%s foreign key (%s) references %s(%s)',
+            $constraint,
+            $columns,
+            $referencedTable,
+            $referencedColumns
+        );
         return new AlterInstructions([$sql]);
     }
 
@@ -497,7 +526,8 @@ class SnowflakeAdapter extends PdoAdapter
         $types = ['string', 'array', 'NULL'];
         if (!in_array(gettype($newColumns), $types)) {
             throw new \InvalidArgumentException(
-                sprintf('The type of the $newColumns argument must be one of `%s`',
+                sprintf(
+                    'The type of the $newColumns argument must be one of `%s`',
                     strtolower(implode('`,`', $types))
                 )
             );
@@ -627,7 +657,10 @@ class SnowflakeAdapter extends PdoAdapter
         $aliases_for_TIMESTAMP_NTZ = ['timestamp_ntz', 'datetime', 'timestampntz', 'timestamp without time zone'];
         $aliases_for_TIMESTAMP_TZ = ['timestamp_tz', 'timestamptz', 'timestamp with time zone'];
         $timestamps = array_merge(
-            ['timestamp'], $aliases_for_TIMESTAMP_LTZ, $aliases_for_TIMESTAMP_NTZ, $aliases_for_TIMESTAMP_TZ
+            ['timestamp'],
+            $aliases_for_TIMESTAMP_LTZ,
+            $aliases_for_TIMESTAMP_NTZ,
+            $aliases_for_TIMESTAMP_TZ
         );
         if (in_array($column->getType(), $timestamps)) {
             if ('timestamp' === $column->getType()) {
@@ -648,14 +681,19 @@ class SnowflakeAdapter extends PdoAdapter
 
         if (!is_null($column->getDefault())) {
             if ('null' != $column->getDefault()) {
-                $numeric = array_merge($synonymousWithNumber, $synonymousWithNumberWithoutPrecisionAndScale, $synonymousWithFloat);
+                $numeric = array_merge(
+                    $synonymousWithNumber,
+                    $synonymousWithNumberWithoutPrecisionAndScale,
+                    $synonymousWithFloat
+                );
                 $string = array_merge($synonymousWithVarchar, ['time', 'date'], $timestamps);
                 $functions = [
                     'current_timestamp', 'sysdate', 'convert_timezone', 'to_varchar',
                     'to_timestamp', 'to_timestamp_tz', 'to_timestamp_ntz',
                     'uuid_string',
                 ];
-                $matches = preg_grep("/" . implode("|", $functions) . "/i", array($column->getDefault()));
+                $matches
+                    = preg_grep("/" . implode("|", $functions) . "/i", array($column->getDefault()));
                 if (!empty($matches)) {
                     $def .= ' default ' . $column->getDefault();
                 } elseif (in_array($column->getType(), $numeric)) {
@@ -780,7 +818,8 @@ class SnowflakeAdapter extends PdoAdapter
         try {
             $rows = $this->fetchAll(sprintf(
                 'select * from %s order by %s',
-                $this->quoteTableName($this->getSchemaTableName()), $orderBy
+                $this->quoteTableName($this->getSchemaTableName()),
+                $orderBy
             ));
         } catch (PDOException $e) {
             if (!$this->isDryRunEnabled()) {
@@ -792,7 +831,9 @@ class SnowflakeAdapter extends PdoAdapter
         $result = [];
         foreach ($rows as $version) {
             $version['breakpoint'] = in_array(
-                $version['breakpoint'], [0, '0', false, 'false', '', null], true
+                $version['breakpoint'],
+                [0, '0', false, 'false', '', null],
+                true
             ) ? 0 : 1;
             $result[(int)$version['version']] = $version;
         }
@@ -872,7 +913,6 @@ class SnowflakeAdapter extends PdoAdapter
         ];
 
         return array_merge($numeric, $string, $logical, $datetime, $semistructured, $geospatial);
-
     }
 
     public function isValidColumnType(Column $column): bool
@@ -963,5 +1003,4 @@ class SnowflakeAdapter extends PdoAdapter
         }
         return $foreignKeys;
     }
-
 }
