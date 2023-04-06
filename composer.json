@@ -42,7 +42,8 @@
   },
   "scripts-descriptions": {
     "test:coverage": "Runs all PHPUnit tests, writes HTML results in TestDox format to `reports/result.html` file and code coverage report to `reports/coverage` directory.",
-    "test:unit": "Runs all PHPUnit tests without code coverage report."
+    "test:unit": "Runs all PHPUnit tests without code coverage report.",
+    "test:mutation": "Runs mutation testing with Infection library."
   },
   "scripts": {
     "test:unit": [
@@ -52,6 +53,10 @@
     "test:coverage": [
       "@putenv XDEBUG_MODE=coverage",
       "phpunit --configuration phpunit.xml --color=always --testdox --coverage-html reports/coverage --testdox-html reports/result.html"
+    ],
+    "test:mutation": [
+      "@putenv XDEBUG_MODE=coverage",
+      "infection --threads=5 --only-covered --logger-html=reports/mutation/index.html"
     ]
   }
 }
