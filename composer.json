@@ -47,7 +47,8 @@
     "test:codesniffer:full": "Runs PHP_CodeSniffer to detect violations of PSR12 coding standard and prints full report.",
     "test:codesniffer:summary": "Runs PHP_CodeSniffer to detect violations of PSR12 coding standard and prints summary report.",
     "test:codesniffer:fix": "Runs PHP_CodeSniffer to automagically correct violations of PSR12 coding standard.",
-    "test:phpstan": "Runs PHPStan static analysis tool on the highest level to discover bugs."
+    "test:phpstan": "Runs PHPStan static analysis tool on the highest level to discover bugs.",
+    "test:phpmd": "Runs PHP Mess Detector to detect code smells and possible errors, writes HTML results to `reports/phpmd.html` file."
   },
   "scripts": {
     "test:unit": [
@@ -73,6 +74,9 @@
     ],
     "test:phpstan": [
       "phpstan analyse --level max --no-progress --xdebug src tests"
+    ],
+    "test:phpmd": [
+      "phpmd src html cleancode,codesize,controversial,design,naming,unusedcode --reportfile reports/phpmd.html"
     ]
   }
 }
