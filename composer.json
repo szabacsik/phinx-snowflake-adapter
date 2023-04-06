@@ -46,7 +46,8 @@
     "test:mutation": "Runs mutation testing with Infection library.",
     "test:codesniffer:full": "Runs PHP_CodeSniffer to detect violations of PSR12 coding standard and prints full report.",
     "test:codesniffer:summary": "Runs PHP_CodeSniffer to detect violations of PSR12 coding standard and prints summary report.",
-    "test:codesniffer:fix": "Runs PHP_CodeSniffer to automagically correct violations of PSR12 coding standard."
+    "test:codesniffer:fix": "Runs PHP_CodeSniffer to automagically correct violations of PSR12 coding standard.",
+    "test:phpstan": "Runs PHPStan static analysis tool on the highest level to discover bugs."
   },
   "scripts": {
     "test:unit": [
@@ -69,6 +70,9 @@
     ],
     "test:codesniffer:fix": [
       "phpcbf -v --colors --standard=PSR12 src tests"
+    ],
+    "test:phpstan": [
+      "phpstan analyse --level max --no-progress --xdebug src tests"
     ]
   }
 }
