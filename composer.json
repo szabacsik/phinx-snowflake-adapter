@@ -39,5 +39,19 @@
     "allow-plugins": {
       "infection/extension-installer": true
     }
+  },
+  "scripts-descriptions": {
+    "test:coverage": "Runs all PHPUnit tests, writes HTML results in TestDox format to `reports/result.html` file and code coverage report to `reports/coverage` directory.",
+    "test:unit": "Runs all PHPUnit tests without code coverage report."
+  },
+  "scripts": {
+    "test:unit": [
+      "@putenv XDEBUG_MODE=coverage",
+      "phpunit --configuration phpunit.xml --colors=always --testdox --display-warnings --display-errors --no-coverage"
+    ],
+    "test:coverage": [
+      "@putenv XDEBUG_MODE=coverage",
+      "phpunit --configuration phpunit.xml --color=always --testdox --coverage-html reports/coverage --testdox-html reports/result.html"
+    ]
   }
 }
