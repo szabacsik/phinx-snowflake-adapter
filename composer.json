@@ -41,7 +41,7 @@
     }
   },
   "scripts-descriptions": {
-    "test:coverage": "Runs all PHPUnit tests, writes HTML results in TestDox format to `reports/result.html` file and code coverage report to `reports/coverage` directory.",
+    "test:coverage": "Runs all PHPUnit tests, uses `reports` directory, writes results to `result.html`, `results.xml`, `coverage.xml` files and to `coverage` subdirectory.",
     "test:unit": "Runs all PHPUnit tests without code coverage report.",
     "test:mutation": "Runs mutation testing with Infection library.",
     "test:codesniffer:full": "Runs PHP_CodeSniffer to detect violations of PSR12 coding standard and prints full report.",
@@ -52,16 +52,14 @@
   },
   "scripts": {
     "test:unit": [
-      "@putenv XDEBUG_MODE=coverage",
       "phpunit --configuration phpunit.xml --colors=always --testdox --display-warnings --display-errors --no-coverage"
     ],
     "test:coverage": [
       "@putenv XDEBUG_MODE=coverage",
-      "phpunit --configuration phpunit.xml --color=always --testdox --coverage-html reports/coverage --testdox-html reports/result.html"
+      "phpunit --configuration phpunit.xml --color=always --testdox --coverage-text --do-not-cache-result --log-junit reports/results.xml --coverage-html reports/coverage --coverage-clover reports/coverage.xml --testdox-html reports/result.html"
     ],
     "test:mutation": [
-      "@putenv XDEBUG_MODE=coverage",
-      "infection --threads=5 --only-covered --logger-html=reports/mutation/index.html"
+      "infection --no-progress --threads=5 --logger-html=reports/mutation/index.html"
     ],
     "test:codesniffer:full": [
       "phpcs -v --colors --report=full --standard=PSR12 src tests"
